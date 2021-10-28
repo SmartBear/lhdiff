@@ -9,8 +9,6 @@ import (
 	"math"
 	"regexp"
 	"sort"
-
-	//"sort"
 	"strings"
 )
 
@@ -73,9 +71,9 @@ func (a ByCombinedSimilarity) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 const ContextSimilarityFactor = 0.4
 const ContentSimilarityFactor = 0.6
-const SimilarityThreshold = 0.40
+const SimilarityThreshold = 0.43
 
-func Lhdiff(left string, right string) (LeftToRight, int) {
+func Lhdiff(left string, right string) (LeftToRight, []string, []string) {
 	leftLines := ConvertToLinesWithoutNewLine(left)
 	rightLines := ConvertToLinesWithoutNewLine(right)
 
@@ -93,21 +91,25 @@ func Lhdiff(left string, right string) (LeftToRight, int) {
 		leftToRight, leftLineNumbers, rightLineNumbers := LineNumbersFromDiff(fileDiff)
 
 		Compute(leftLineNumbers, leftLines, rightLineNumbers, rightLines, leftToRight)
-		return leftToRight, len(leftLines)
+		return leftToRight, leftLines, rightLines
 	} else {
 		var leftToRight = make(LeftToRight)
 		for leftLineNumber, _ := range leftLines {
 			leftToRight[leftLineNumber] = leftLineNumber
 		}
-		return leftToRight, len(leftLines)
+		return leftToRight, leftLines, rightLines
 	}
 }
 
-func PrintLhdiff(left string, right string) {
-	leftToRight, leftCount := Lhdiff(left, right)
-	for left := 0; left < leftCount; left++ {
+func PrintLhdiff(left string, right string, lines bool) {
+	leftToRight, leftLines, rightLines := Lhdiff(left, right)
+	for left := 0; left < len(leftLines); left++ {
 		if right, ok := leftToRight[left]; ok {
-			fmt.Printf("%d -> %d\n", left+1, right+1)
+			if lines {
+				fmt.Printf("%d:%s -> %d:%s\n", left+1, strings.TrimSpace(leftLines[left]), right+1, strings.TrimSpace(rightLines[right]))
+			} else {
+				fmt.Printf("%d -> %d\n", left+1, right+1)
+			}
 		} else {
 			fmt.Printf("%d -> _\n", left+1)
 		}
@@ -144,9 +146,9 @@ func Compute(leftLineNumbers []int, leftLines []string, rightLineNumbers []int, 
 		sort.Sort(ByCombinedSimilarity(pairs))
 		pair := pairs[0]
 		//fmt.Printf("%d:%s -> %d:%s (%f %f %f)\n",
-		//	pair.left.lineNumber,
+		//	pair.left.lineNumber + 1,
 		//	strings.TrimSpace(pair.left.content),
-		//	pair.right.lineNumber,
+		//	pair.right.lineNumber + 1,
 		//	strings.TrimSpace(pair.right.content),
 		//	pair.contextTfIdfCosine(),
 		//	pair.contentNormalizedLevenshteinSimilarity(),

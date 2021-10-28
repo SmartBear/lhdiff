@@ -14,9 +14,14 @@ go get github.com/aslakhellesoy/lhdiff
 
 ## Usage
 
-```
-lhdiff --help
-```
+    lhdiff left right
+
+Example using git
+
+    dist/lhdiff_darwin_amd64/lhdiff \
+    <( git show 400a62e39d39d231d8160002dfb7ed95a004278b:cmd/lhdiff/main.go ) \
+    <( git show 35f1ba7b554d69a07e59d6f69297d08599f4217c:cmd/lhdiff/main.go ) \
+
 
 # LICENSE
 

@@ -11,7 +11,7 @@ trois
 quatre
 `
 
-	PrintLhdiff(left, right)
+	PrintLhdiff(left, right, false)
 
 	// Output:
 	// 1 -> _
@@ -26,7 +26,7 @@ two
 three
 four`
 
-	PrintLhdiff(left, left)
+	PrintLhdiff(left, left, false)
 
 	// Output:
 	// 1 -> 1
@@ -46,7 +46,7 @@ two
 one
 `
 
-	PrintLhdiff(left, right)
+	PrintLhdiff(left, right, false)
 
 	// Output:
 	// 1 -> 4
@@ -82,7 +82,7 @@ ten and a half
 eleven
 `
 
-	PrintLhdiff(left, right)
+	PrintLhdiff(left, right, false)
 
 	// Output:
 	// 1 -> 1
@@ -135,7 +135,7 @@ func ExampleLhdiff_withDataFromPaper() {
 }
 `
 
-	PrintLhdiff(left, right)
+	PrintLhdiff(left, right, false)
 
 	// Output:
 	// 1 -> 1
@@ -153,6 +153,65 @@ func ExampleLhdiff_withDataFromPaper() {
 	// 13 -> 13
 	// 14 -> 15
 	// 15 -> _
+	// 16 -> 16
+	// 17 -> 17
+}
+
+func ExampleLhdiff_withDataFromMainGo() {
+	left := `package main
+
+import (
+	"flag"
+	"github.com/aslakhellesoy/lhdiff"
+	"io/ioutil"
+)
+
+func main() {
+	leftFile := flag.Arg(0)
+	rightFile := flag.Arg(1)
+	//app.Parse(os.Args[1:])
+	left, _ := ioutil.ReadFile(leftFile)
+	right, _ := ioutil.ReadFile(rightFile)
+	lhdiff.Lhdiff(string(left), string(right))
+}
+`
+
+	right := `package main
+
+import (
+	"flag"
+	"github.com/aslakhellesoy/lhdiff"
+	"io/ioutil"
+)
+
+func main() {
+	flag.Parse()
+	leftFile := flag.Arg(0)
+	rightFile := flag.Arg(1)
+	left, _ := ioutil.ReadFile(leftFile)
+	right, _ := ioutil.ReadFile(rightFile)
+	lhdiff.PrintLhdiff(string(left), string(right))
+}
+`
+
+	PrintLhdiff(left, right, false)
+
+	// Output:
+	// 1 -> 1
+	// 2 -> 2
+	// 3 -> 3
+	// 4 -> 4
+	// 5 -> 5
+	// 6 -> 6
+	// 7 -> 7
+	// 8 -> 8
+	// 9 -> 9
+	// 10 -> 11
+	// 11 -> 12
+	// 12 -> 10
+	// 13 -> 13
+	// 14 -> 14
+	// 15 -> 15
 	// 16 -> 16
 	// 17 -> 17
 }
