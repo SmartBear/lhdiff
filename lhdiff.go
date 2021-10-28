@@ -63,7 +63,7 @@ func (linePair LinePair) combinedSimilarity() float64 {
 
 type ByCombinedSimilarity []LinePair
 
-func (a ByCombinedSimilarity) Len() int      { return len(a) }
+func (a ByCombinedSimilarity) Len() int { return len(a) }
 func (a ByCombinedSimilarity) Less(i, j int) bool {
 	return a[j].combinedSimilarity() < a[i].combinedSimilarity()
 }
@@ -222,7 +222,7 @@ func LineNumbersFromDiff(fileDiff *diff.FileDiff) (LeftToRight, []int, []int) {
 
 	for i, hunk := range fileDiff.Hunks {
 		if i == 0 {
-			for lineNumber := 0; lineNumber < int(hunk.OrigStartLine) - 1; lineNumber++ {
+			for lineNumber := 0; lineNumber < int(hunk.OrigStartLine)-1; lineNumber++ {
 				leftToRight[lineNumber] = lineNumber
 			}
 		}

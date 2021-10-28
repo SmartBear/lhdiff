@@ -35,6 +35,34 @@ four`
 	// 4 -> 4
 }
 
+func ExampleLhdiff_withEmptyLeft() {
+	right := `one
+two
+three
+four`
+
+	PrintLhdiff("", right, false)
+
+	// Output:
+	// 1 -> _
+}
+
+func ExampleLhdiff_withEmptyRight() {
+	left := `one
+two
+three
+four`
+
+	PrintLhdiff(left, "", false)
+
+	// Output:
+	// 1 -> _
+	// 2 -> _
+	// 3 -> _
+	// 4 -> _
+
+}
+
 func ExampleLhdiff_withSmallData() {
 	left := `one
 two
