@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/ianbruene/go-difflib/difflib"
 	t "github.com/rexsimiloluwah/distance_metrics/text"
-	"github.com/rhnvrm/textsimilarity"
 	"github.com/sourcegraph/go-diff/diff"
 	"math"
 	"regexp"
@@ -87,13 +86,32 @@ func Lhdiff(left string, right string) (LeftToRight, int) {
 		ToFile:   "right",
 		Context:  3,
 	})
-	fileDiff, _ := diff.ParseFileDiff([]byte(diffScript))
+	if diffScript != "" {
+		fileDiff, _ := diff.ParseFileDiff([]byte(diffScript))
 
-	// B. Detect Unchanged Lines
-	leftToRight, leftLineNumbers, rightLineNumbers := LineNumbersFromDiff(fileDiff)
+		// B. Detect Unchanged Lines
+		leftToRight, leftLineNumbers, rightLineNumbers := LineNumbersFromDiff(fileDiff)
 
-	Compute(leftLineNumbers, leftLines, rightLineNumbers, rightLines, leftToRight)
-	return leftToRight, len(leftLines)
+		Compute(leftLineNumbers, leftLines, rightLineNumbers, rightLines, leftToRight)
+		return leftToRight, len(leftLines)
+	} else {
+		var leftToRight = make(LeftToRight)
+		for leftLineNumber, _ := range leftLines {
+			leftToRight[leftLineNumber] = leftLineNumber
+		}
+		return leftToRight, len(leftLines)
+	}
+}
+
+func PrintLhdiff(left string, right string) {
+	leftToRight, leftCount := Lhdiff(left, right)
+	for left := 0; left < leftCount; left++ {
+		if right, ok := leftToRight[left]; ok {
+			fmt.Printf("%d -> %d\n", left+1, right+1)
+		} else {
+			fmt.Printf("%d -> _\n", left+1)
+		}
+	}
 }
 
 func Compute(leftLineNumbers []int, leftLines []string, rightLineNumbers []int, rightLines []string, leftToRight LeftToRight) {
@@ -266,13 +284,4 @@ func Map(vs []string, f func(string) string) []string {
 func RemoveMultipleSpaceAndTrim(s string) string {
 	re := regexp.MustCompile("[ \t]+")
 	return strings.TrimSpace(re.ReplaceAllString(s, " ")) + "\n"
-}
-
-func TfIdfCosine(docA string, docB string) float64 {
-	ts := textsimilarity.New([]string{docA, docB}, textsimilarity.WithCustomStopwords([][]byte{}))
-	actual, err := ts.Similarity(docA, docB)
-	if err != nil {
-		panic(err)
-	}
-	return actual
 }

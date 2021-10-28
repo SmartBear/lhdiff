@@ -1,8 +1,39 @@
 package lhdiff
 
-import (
-	"fmt"
-)
+func ExampleLhdiff_withUnrelatedLines() {
+	left := `one
+two
+three
+four`
+	right := `un
+deux
+trois
+quatre
+`
+
+	PrintLhdiff(left, right)
+
+	// Output:
+	// 1 -> _
+	// 2 -> _
+	// 3 -> _
+	// 4 -> _
+}
+
+func ExampleLhdiff_withIdenticalLines() {
+	left := `one
+two
+three
+four`
+
+	PrintLhdiff(left, left)
+
+	// Output:
+	// 1 -> 1
+	// 2 -> 2
+	// 3 -> 3
+	// 4 -> 4
+}
 
 func ExampleLhdiff_withSmallData() {
 	left := `one
@@ -15,7 +46,7 @@ two
 one
 `
 
-	printLhDiff(left, right)
+	PrintLhdiff(left, right)
 
 	// Output:
 	// 1 -> 4
@@ -51,7 +82,7 @@ ten and a half
 eleven
 `
 
-	printLhDiff(left, right)
+	PrintLhdiff(left, right)
 
 	// Output:
 	// 1 -> 1
@@ -104,7 +135,7 @@ func ExampleLhdiff_withDataFromPaper() {
 }
 `
 
-	printLhDiff(left, right)
+	PrintLhdiff(left, right)
 
 	// Output:
 	// 1 -> 1
@@ -124,15 +155,4 @@ func ExampleLhdiff_withDataFromPaper() {
 	// 15 -> _
 	// 16 -> 16
 	// 17 -> 17
-}
-
-func printLhDiff(left string, right string) {
-	leftToRight, leftCount := Lhdiff(left, right)
-	for left := 0; left < leftCount; left++ {
-		if right, ok := leftToRight[left]; ok {
-			fmt.Printf("%d -> %d\n", left+1, right+1)
-		} else {
-			fmt.Printf("%d -> _\n", left+1)
-		}
-	}
 }
