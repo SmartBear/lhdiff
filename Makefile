@@ -1,7 +1,6 @@
-.PHONY: gen lint test install man
+.PHONY: gen lint test install
 
-VERSION := `git vertag get`
-COMMIT  := `git rev-parse HEAD`
+VERSION := "0.0.1"
 
 gen:
 	go generate ./...
@@ -13,7 +12,4 @@ test: lint
 	go test -v --race ./...
 
 install: test
-	go install -a -ldflags "-X=main.version=$(VERSION) -X=main.commit=$(COMMIT)" ./...
-
-man:
-	go run main.go --help-man > lhdiff.1
+	go install -a -ldflags "-X=main.version=$(VERSION)" ./...
