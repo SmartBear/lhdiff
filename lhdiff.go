@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/ianbruene/go-difflib/difflib"
-	t "github.com/rexsimiloluwah/distance_metrics/text"
+	"github.com/ka-weihe/fast-levenshtein"
 	"github.com/sourcegraph/go-diff/diff"
 	"math"
 	"regexp"
@@ -24,8 +24,8 @@ type LinePair struct {
 }
 
 func (linePair LinePair) contentNormalizedLevenshteinSimilarity() float64 {
-	levensthein := t.Levensthein(linePair.left.content, linePair.right.content)
-	normalizedLevenhsteinDistance := float64(levensthein) / math.Max(float64(len(linePair.left.content)), float64(len(linePair.right.content)))
+	distance := levenshtein.Distance(linePair.left.content, linePair.right.content)
+	normalizedLevenhsteinDistance := float64(distance) / math.Max(float64(len(linePair.left.content)), float64(len(linePair.right.content)))
 	return 1 - normalizedLevenhsteinDistance
 }
 
@@ -34,7 +34,7 @@ func (linePair LinePair) contextTfIdfCosineSimilarity() float64 {
 }
 
 func (linePair LinePair) combinedSimilarity() float64 {
-	return ContextSimilarityFactor*float64(linePair.contextTfIdfCosineSimilarity()) + ContentSimilarityFactor*float64(linePair.contentNormalizedLevenshteinSimilarity())
+	return ContextSimilarityFactor*linePair.contextTfIdfCosineSimilarity() + ContentSimilarityFactor*linePair.contentNormalizedLevenshteinSimilarity()
 }
 
 type ByCombinedSimilarity []*LinePair
@@ -79,32 +79,9 @@ func Lhdiff(left string, right string, contextSize int) []*LinePair {
 					right: rightLineInfo,
 				}
 				pairs[l] = pair
-				//fmt.Printf("%d:%s -> %d:%s\n", pair.left.lineNumber, strings.TrimSpace(pair.left.content), pair.right.lineNumber, strings.TrimSpace(pair.right.content))
-				//fmt.Printf("  Distance (combined simhash) %f\n", pair.combinedSimhashDistance())
-				//fmt.Printf("  Similarity (content levenshtein) %f\n", pair.contentNormalizedLevenshteinSimilarity())
-				//fmt.Printf("  Similarity (context tf-idf cosine) %f\n", pair.contextTfIdfCosineSimilarity())
-				//fmt.Printf("  Distance (combined) %f\n", pair.combinedSimilarity())
-				//fmt.Printf("%d:%s -> %d:%s (%f %f %f)\n",
-				//	pair.left.lineNumber + 1,
-				//	strings.TrimSpace(pair.left.content),
-				//	pair.right.lineNumber + 1,
-				//	strings.TrimSpace(pair.right.content),
-				//	pair.contextTfIdfCosineSimilarity(),
-				//	pair.contentNormalizedLevenshteinSimilarity(),
-				//	pair.combinedSimilarity(),
-				//)
 			}
 			sort.Sort(ByCombinedSimilarity(pairs))
 			pair := pairs[0]
-			//fmt.Printf("%d:%s -> %d:%s (%f %f %f)\n",
-			//	pair.left.lineNumber + 1,
-			//	strings.TrimSpace(pair.left.content),
-			//	pair.right.lineNumber + 1,
-			//	strings.TrimSpace(pair.right.content),
-			//	pair.contextTfIdfCosineSimilarity(),
-			//	pair.contentNormalizedLevenshteinSimilarity(),
-			//	pair.combinedSimilarity(),
-			//)
 			if pair.combinedSimilarity() > SimilarityThreshold {
 				linePairs[pair.left.lineNumber] = pair
 			}
