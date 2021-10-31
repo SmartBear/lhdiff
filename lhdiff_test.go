@@ -11,13 +11,13 @@ trois
 quatre
 `
 
-	PrintLhdiff(left, right, false)
+	PrintLhdiff(left, right, 4, false)
 
 	// Output:
-	// 1 -> _
-	// 2 -> _
-	// 3 -> _
-	// 4 -> _
+	// 1,_
+	// 2,_
+	// 3,_
+	// 4,_
 }
 
 func ExampleLhdiff_withIdenticalLines() {
@@ -26,13 +26,13 @@ two
 three
 four`
 
-	PrintLhdiff(left, left, false)
+	PrintLhdiff(left, left, 4, false)
 
 	// Output:
-	// 1 -> 1
-	// 2 -> 2
-	// 3 -> 3
-	// 4 -> 4
+	// 1,1
+	// 2,2
+	// 3,3
+	// 4,4
 }
 
 func ExampleLhdiff_withEmptyLeft() {
@@ -41,10 +41,10 @@ two
 three
 four`
 
-	PrintLhdiff("", right, false)
+	PrintLhdiff("", right, 4, false)
 
 	// Output:
-	// 1 -> _
+	// 1,_
 }
 
 func ExampleLhdiff_withEmptyRight() {
@@ -53,13 +53,13 @@ two
 three
 four`
 
-	PrintLhdiff(left, "", false)
+	PrintLhdiff(left, "", 4, false)
 
 	// Output:
-	// 1 -> _
-	// 2 -> _
-	// 3 -> _
-	// 4 -> _
+	// 1,_
+	// 2,_
+	// 3,_
+	// 4,_
 
 }
 
@@ -74,13 +74,13 @@ two
 one
 `
 
-	PrintLhdiff(left, right, false)
+	PrintLhdiff(left, right, 4, false)
 
 	// Output:
-	// 1 -> 4
-	// 2 -> 3
-	// 3 -> 2
-	// 4 -> 1
+	// 1,4
+	// 2,3
+	// 3,2
+	// 4,1
 }
 
 func ExampleLhdiff_withSimilarContext() {
@@ -110,21 +110,21 @@ ten and a half
 eleven
 `
 
-	PrintLhdiff(left, right, false)
+	PrintLhdiff(left, right, 4, false)
 
 	// Output:
-	// 1 -> 1
-	// 2 -> 2
-	// 3 -> 3
-	// 4 -> 4
-	// 5 -> 5
-	// 6 -> 6
-	// 7 -> 7
-	// 8 -> 8
-	// 9 -> 9
-	// 10 -> 10
-	// 11 -> 12
-	// 12 -> 13
+	// 1,1
+	// 2,2
+	// 3,3
+	// 4,4
+	// 5,5
+	// 6,6
+	// 7,7
+	// 8,8
+	// 9,9
+	// 10,10
+	// 11,12
+	// 12,13
 }
 
 func ExampleLhdiff_withDataFromPaper() {
@@ -163,26 +163,26 @@ func ExampleLhdiff_withDataFromPaper() {
 }
 `
 
-	PrintLhdiff(left, right, false)
+	PrintLhdiff(left, right, 4, false)
 
 	// Output:
-	// 1 -> 1
-	// 2 -> 2
-	// 3 -> _
-	// 4 -> 3
-	// 5 -> 4
-	// 6 -> 6
-	// 7 -> 10
-	// 8 -> _
-	// 9 -> _
-	// 10 -> _
-	// 11 -> _
-	// 12 -> _
-	// 13 -> 13
-	// 14 -> 15
-	// 15 -> _
-	// 16 -> 16
-	// 17 -> 17
+	// 1,1
+	// 2,2
+	// 3,_
+	// 4,3
+	// 5,4
+	// 6,6
+	// 7,10
+	// 8,_
+	// 9,_
+	// 10,_
+	// 11,_
+	// 12,_
+	// 13,13
+	// 14,15
+	// 15,_
+	// 16,16
+	// 17,17
 }
 
 func ExampleLhdiff_withDataFromMainGo() {
@@ -222,24 +222,24 @@ func main() {
 }
 `
 
-	PrintLhdiff(left, right, false)
+	PrintLhdiff(left, right, 4, false)
 
 	// Output:
-	// 1 -> 1
-	// 2 -> 2
-	// 3 -> 3
-	// 4 -> 4
-	// 5 -> 5
-	// 6 -> 6
-	// 7 -> 7
-	// 8 -> 8
-	// 9 -> 9
-	// 10 -> 11
-	// 11 -> 12
-	// 12 -> 10
-	// 13 -> 13
-	// 14 -> 14
-	// 15 -> 15
-	// 16 -> 16
-	// 17 -> 17
+	// 1,1
+	// 2,2
+	// 3,3
+	// 4,4
+	// 5,5
+	// 6,6
+	// 7,7
+	// 8,8
+	// 9,9
+	// 10,11
+	// 11,12
+	// 12,10
+	// 13,13
+	// 14,14
+	// 15,15
+	// 16,16
+	// 17,17
 }

@@ -12,40 +12,16 @@ import (
 	"strings"
 )
 
-type LeftToRight map[int]int
-
 type LineInfo struct {
 	lineNumber int
 	content    string
 	context    string
 }
 
-//func (lineInfo LineInfo) contextSimHash() uint64 {
-//	sh := simhash.NewSimhash()
-//	return sh.GetSimhash(sh.NewWordFeatureSet([]byte(lineInfo.context)))
-//}
-//
-//func (lineInfo LineInfo) contentSimHash() uint64 {
-//	sh := simhash.NewSimhash()
-//	return sh.GetSimhash(sh.NewWordFeatureSet([]byte(lineInfo.content)))
-//}
-
 type LinePair struct {
 	left  LineInfo
 	right LineInfo
 }
-
-//func (linePair LinePair) contextSimhashHammingDistance() uint8 {
-//	return simhash.Compare(linePair.left.contextSimHash(), linePair.right.contextSimHash())
-//}
-//
-//func (linePair LinePair) contentSimhashHammingDistance() uint8 {
-//	return simhash.Compare(linePair.left.contentSimHash(), linePair.right.contentSimHash())
-//}
-//
-//func (linePair LinePair) combinedSimhashDistance() float64 {
-//	return ContextSimilarityFactor*float64(linePair.contextSimhashHammingDistance()) + ContentSimilarityFactor*float64(linePair.contentSimhashHammingDistance())
-//}
 
 func (linePair LinePair) contentNormalizedLevenshteinSimilarity() float64 {
 	levensthein := t.Levensthein(linePair.left.content, linePair.right.content)
@@ -53,15 +29,15 @@ func (linePair LinePair) contentNormalizedLevenshteinSimilarity() float64 {
 	return 1 - normalizedLevenhsteinDistance
 }
 
-func (linePair LinePair) contextTfIdfCosine() float64 {
-	return TfIdfCosine(linePair.left.context, linePair.right.context)
+func (linePair LinePair) contextTfIdfCosineSimilarity() float64 {
+	return TfIdfCosineSimilarity(linePair.left.context, linePair.right.context)
 }
 
 func (linePair LinePair) combinedSimilarity() float64 {
-	return ContextSimilarityFactor*float64(linePair.contextTfIdfCosine()) + ContentSimilarityFactor*float64(linePair.contentNormalizedLevenshteinSimilarity())
+	return ContextSimilarityFactor*float64(linePair.contextTfIdfCosineSimilarity()) + ContentSimilarityFactor*float64(linePair.contentNormalizedLevenshteinSimilarity())
 }
 
-type ByCombinedSimilarity []LinePair
+type ByCombinedSimilarity []*LinePair
 
 func (a ByCombinedSimilarity) Len() int { return len(a) }
 func (a ByCombinedSimilarity) Less(i, j int) bool {
@@ -73,9 +49,11 @@ const ContextSimilarityFactor = 0.4
 const ContentSimilarityFactor = 0.6
 const SimilarityThreshold = 0.43
 
-func Lhdiff(left string, right string) (LeftToRight, []string, []string) {
+func Lhdiff(left string, right string, contextSize int) []*LinePair {
 	leftLines := ConvertToLinesWithoutNewLine(left)
 	rightLines := ConvertToLinesWithoutNewLine(right)
+
+	linePairs := make([]*LinePair, len(leftLines))
 
 	diffScript, _ := difflib.GetUnifiedDiffString(difflib.LineDiffParams{
 		A:        leftLines,
@@ -88,74 +66,72 @@ func Lhdiff(left string, right string) (LeftToRight, []string, []string) {
 		fileDiff, _ := diff.ParseFileDiff([]byte(diffScript))
 
 		// B. Detect Unchanged Lines
-		leftToRight, leftLineNumbers, rightLineNumbers := LineNumbersFromDiff(fileDiff)
+		leftLineNumbers, rightLineNumbers := LineNumbersFromDiff(fileDiff, linePairs, leftLines, rightLines, contextSize)
 
-		Compute(leftLineNumbers, leftLines, rightLineNumbers, rightLines, leftToRight)
-		return leftToRight, leftLines, rightLines
-	} else {
-		var leftToRight = make(LeftToRight)
-		for leftLineNumber, _ := range leftLines {
-			leftToRight[leftLineNumber] = leftLineNumber
-		}
-		return leftToRight, leftLines, rightLines
-	}
-}
+		leftLineInfos := MakeLineInfos(leftLineNumbers, leftLines, contextSize)
+		rightLineInfos := MakeLineInfos(rightLineNumbers, rightLines, contextSize)
 
-func PrintLhdiff(left string, right string, lines bool) {
-	leftToRight, leftLines, rightLines := Lhdiff(left, right)
-	for left := 0; left < len(leftLines); left++ {
-		if right, ok := leftToRight[left]; ok {
-			if lines {
-				fmt.Printf("%d:%s -> %d:%s\n", left+1, strings.TrimSpace(leftLines[left]), right+1, strings.TrimSpace(rightLines[right]))
-			} else {
-				fmt.Printf("%d -> %d\n", left+1, right+1)
+		for _, rightLineInfo := range rightLineInfos {
+			pairs := make([]*LinePair, len(leftLineInfos))
+			for l, leftLineInfo := range leftLineInfos {
+				pair := &LinePair{
+					left:  leftLineInfo,
+					right: rightLineInfo,
+				}
+				pairs[l] = pair
+				//fmt.Printf("%d:%s -> %d:%s\n", pair.left.lineNumber, strings.TrimSpace(pair.left.content), pair.right.lineNumber, strings.TrimSpace(pair.right.content))
+				//fmt.Printf("  Distance (combined simhash) %f\n", pair.combinedSimhashDistance())
+				//fmt.Printf("  Similarity (content levenshtein) %f\n", pair.contentNormalizedLevenshteinSimilarity())
+				//fmt.Printf("  Similarity (context tf-idf cosine) %f\n", pair.contextTfIdfCosineSimilarity())
+				//fmt.Printf("  Distance (combined) %f\n", pair.combinedSimilarity())
+				//fmt.Printf("%d:%s -> %d:%s (%f %f %f)\n",
+				//	pair.left.lineNumber + 1,
+				//	strings.TrimSpace(pair.left.content),
+				//	pair.right.lineNumber + 1,
+				//	strings.TrimSpace(pair.right.content),
+				//	pair.contextTfIdfCosineSimilarity(),
+				//	pair.contentNormalizedLevenshteinSimilarity(),
+				//	pair.combinedSimilarity(),
+				//)
 			}
-		} else {
-			fmt.Printf("%d -> _\n", left+1)
-		}
-	}
-}
-
-func Compute(leftLineNumbers []int, leftLines []string, rightLineNumbers []int, rightLines []string, leftToRight LeftToRight) {
-	leftLineInfos := MakeLineInfos(leftLineNumbers, leftLines, 4)
-	rightLineInfos := MakeLineInfos(rightLineNumbers, rightLines, 4)
-
-	for _, rightLineInfo := range rightLineInfos {
-		pairs := make([]LinePair, len(leftLineInfos))
-		for l, leftLineInfo := range leftLineInfos {
-			pair := LinePair{
-				left:  leftLineInfo,
-				right: rightLineInfo,
-			}
-			pairs[l] = pair
-			//fmt.Printf("%d:%s -> %d:%s\n", pair.left.lineNumber, strings.TrimSpace(pair.left.content), pair.right.lineNumber, strings.TrimSpace(pair.right.content))
-			//fmt.Printf("  Distance (combined simhash) %f\n", pair.combinedSimhashDistance())
-			//fmt.Printf("  Similarity (content levenshtein) %f\n", pair.contentNormalizedLevenshteinSimilarity())
-			//fmt.Printf("  Similarity (context tf-idf cosine) %f\n", pair.contextTfIdfCosine())
-			//fmt.Printf("  Distance (combined) %f\n", pair.combinedSimilarity())
+			sort.Sort(ByCombinedSimilarity(pairs))
+			pair := pairs[0]
 			//fmt.Printf("%d:%s -> %d:%s (%f %f %f)\n",
 			//	pair.left.lineNumber + 1,
 			//	strings.TrimSpace(pair.left.content),
 			//	pair.right.lineNumber + 1,
 			//	strings.TrimSpace(pair.right.content),
-			//	pair.contextTfIdfCosine(),
+			//	pair.contextTfIdfCosineSimilarity(),
 			//	pair.contentNormalizedLevenshteinSimilarity(),
 			//	pair.combinedSimilarity(),
 			//)
+			if pair.combinedSimilarity() > SimilarityThreshold {
+				linePairs[pair.left.lineNumber] = pair
+			}
 		}
-		sort.Sort(ByCombinedSimilarity(pairs))
-		pair := pairs[0]
-		//fmt.Printf("%d:%s -> %d:%s (%f %f %f)\n",
-		//	pair.left.lineNumber + 1,
-		//	strings.TrimSpace(pair.left.content),
-		//	pair.right.lineNumber + 1,
-		//	strings.TrimSpace(pair.right.content),
-		//	pair.contextTfIdfCosine(),
-		//	pair.contentNormalizedLevenshteinSimilarity(),
-		//	pair.combinedSimilarity(),
-		//)
-		if pair.combinedSimilarity() > SimilarityThreshold {
-			leftToRight[pair.left.lineNumber] = pair.right.lineNumber
+	} else {
+		for leftLineNumber, _ := range leftLines {
+			lineInfo := MakeLineInfo(leftLineNumber, leftLines, 4)
+			linePairs[leftLineNumber] = &LinePair{
+				left:  lineInfo,
+				right: lineInfo,
+			}
+		}
+	}
+	return linePairs
+}
+
+func PrintLhdiff(left string, right string, contextSize int, lines bool) {
+	linePairs := Lhdiff(left, right, contextSize)
+	for lineNumber, pair := range linePairs {
+		if pair == nil {
+			fmt.Printf("%d,_\n", lineNumber+1)
+		} else {
+			if lines {
+				fmt.Printf("%d:%s,%d:%s\n", pair.left.lineNumber+1, strings.TrimSpace(pair.left.content), pair.right.lineNumber+1, strings.TrimSpace(pair.right.content))
+			} else {
+				fmt.Printf("%d,%d\n", pair.left.lineNumber+1, pair.right.lineNumber+1)
+			}
 		}
 	}
 }
@@ -163,15 +139,20 @@ func Compute(leftLineNumbers []int, leftLines []string, rightLineNumbers []int, 
 func MakeLineInfos(lineNumbers []int, lines []string, contextSize int) []LineInfo {
 	lineInfos := make([]LineInfo, len(lineNumbers))
 	for i, lineNumber := range lineNumbers {
-		context := GetContext(lineNumber, lines, contextSize)
-		content := lines[lineNumber]
-		lineInfos[i] = LineInfo{
-			lineNumber: lineNumber,
-			context:    context,
-			content:    content,
-		}
+		lineInfos[i] = MakeLineInfo(lineNumber, lines, contextSize)
 	}
 	return lineInfos
+}
+
+func MakeLineInfo(lineNumber int, lines []string, contextSize int) LineInfo {
+	content := lines[lineNumber]
+	context := GetContext(lineNumber, lines, contextSize)
+	lineInfo := LineInfo{
+		lineNumber: lineNumber,
+		context:    context,
+		content:    content,
+	}
+	return lineInfo
 }
 
 var /* const */ brackets = regexp.MustCompile("^[{()}]$")
@@ -212,9 +193,7 @@ func GetContext(lineNumber int, lines []string, contextSize int) string {
 // 1: a map of unchanged line numbers (from left to right)
 // 2: a slice of removed line numbers in left
 // 3: a slice of added line numbers in right
-func LineNumbersFromDiff(fileDiff *diff.FileDiff) (LeftToRight, []int, []int) {
-	var leftToRight = make(LeftToRight)
-
+func LineNumbersFromDiff(fileDiff *diff.FileDiff, pairs []*LinePair, leftLines []string, rightLines []string, contextSize int) ([]int, []int) {
 	// Deleted from left
 	var leftLineNumbers []int
 	// Added to right
@@ -223,25 +202,21 @@ func LineNumbersFromDiff(fileDiff *diff.FileDiff) (LeftToRight, []int, []int) {
 	for i, hunk := range fileDiff.Hunks {
 		if i == 0 {
 			for lineNumber := 0; lineNumber < int(hunk.OrigStartLine)-1; lineNumber++ {
-				leftToRight[lineNumber] = lineNumber
+				lineInfo := MakeLineInfo(lineNumber, leftLines, contextSize)
+				pairs[lineNumber] = &LinePair{
+					left:  lineInfo,
+					right: lineInfo,
+				}
 			}
 		}
-		leftToRightHunk, leftLineNumbersHunk, rightLineNumbersHunk := LineNumbersFromHunk(hunk)
-		for leftLineNumber, rightLineNumber := range leftToRightHunk {
-			if existingRightLineNumber, exists := leftToRight[leftLineNumber]; exists {
-				panic(fmt.Sprintf("Already mapped %d to %v. Cannot map again to %v", leftLineNumber, existingRightLineNumber, rightLineNumber))
-			} else {
-				leftToRight[leftLineNumber] = rightLineNumber
-			}
-		}
+		leftLineNumbersHunk, rightLineNumbersHunk := LineNumbersFromHunk(hunk, pairs, leftLines, rightLines, contextSize)
 		leftLineNumbers = append(leftLineNumbers, leftLineNumbersHunk...)
 		rightLineNumbers = append(rightLineNumbers, rightLineNumbersHunk...)
 	}
-	return leftToRight, leftLineNumbers, rightLineNumbers
+	return leftLineNumbers, rightLineNumbers
 }
 
-func LineNumbersFromHunk(hunk *diff.Hunk) (LeftToRight, []int, []int) {
-	var leftToRight = make(LeftToRight)
+func LineNumbersFromHunk(hunk *diff.Hunk, pairs []*LinePair, leftLines []string, rightLines []string, contextSize int) ([]int, []int) {
 	var leftLineNumbers []int
 	var rightLineNumbers []int
 
@@ -262,12 +237,15 @@ func LineNumbersFromHunk(hunk *diff.Hunk) (LeftToRight, []int, []int) {
 			rightLineNumbers = append(rightLineNumbers, rightLineNumber)
 			rightLineNumber++
 		default:
-			leftToRight[leftLineNumber] = rightLineNumber
+			pairs[leftLineNumber] = &LinePair{
+				left:  MakeLineInfo(leftLineNumber, leftLines, contextSize),
+				right: MakeLineInfo(rightLineNumber, rightLines, contextSize),
+			}
 			leftLineNumber++
 			rightLineNumber++
 		}
 	}
-	return leftToRight, leftLineNumbers, rightLineNumbers
+	return leftLineNumbers, rightLineNumbers
 }
 
 func ConvertToLinesWithoutNewLine(text string) []string {

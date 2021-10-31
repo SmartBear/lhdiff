@@ -6,12 +6,12 @@ import (
 	"strings"
 )
 
-func TfIdfCosine(docA string, docB string) float64 {
+func TfIdfCosineSimilarity(docA string, docB string) float64 {
 	tokensA := strings.Fields(docA)
 	tokensB := strings.Fields(docB)
 
-	combinedTokens := union(tokensA, tokensB)
-	n := len(combinedTokens)
+	tokens := union(tokensA, tokensB)
+	n := len(tokens)
 	vectorA := make([]float64, n)
 	vectorB := make([]float64, n)
 
@@ -29,7 +29,7 @@ func TfIdfCosine(docA string, docB string) float64 {
 		}
 	}
 
-	for k, token := range combinedTokens {
+	for k, token := range tokens {
 		vectorA[k] = tfidf(token, tokensA, n, documentFrequency)
 		vectorB[k] = tfidf(token, tokensB, n, documentFrequency)
 	}
