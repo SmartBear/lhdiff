@@ -227,8 +227,21 @@ func LineNumbersFromDiff(fileDiff *diff.FileDiff, pairs []*LinePair, leftLines [
 		leftLineNumbersHunk, rightLineNumbersHunk := LineNumbersFromHunk(hunk, pairs, leftLines, rightLines, previousLeftLineNumber, previousRightLineNumber, contextSize)
 		leftLineNumbers = append(leftLineNumbers, leftLineNumbersHunk...)
 		rightLineNumbers = append(rightLineNumbers, rightLineNumbersHunk...)
-		previousLeftLineNumber = hunk.OrigStartLine -1 + hunk.OrigLines
-		previousRightLineNumber = hunk.NewStartLine -1 + hunk.NewLines
+		previousLeftLineNumber = hunk.OrigStartLine - 1 + hunk.OrigLines
+		previousRightLineNumber = hunk.NewStartLine - 1 + hunk.NewLines
+	}
+	// Add unchanged lines after last hunk
+	leftLineNumber := previousLeftLineNumber
+	rightLineNumber := previousRightLineNumber
+	for int(leftLineNumber) < len(leftLines) {
+		leftLineInfo := MakeLineInfo(int32(leftLineNumber), leftLines, contextSize)
+		rightLineInfo := MakeLineInfo(rightLineNumber, rightLines, contextSize)
+		pairs[leftLineNumber] = &LinePair{
+			left:  leftLineInfo,
+			right: rightLineInfo,
+		}
+		leftLineNumber++
+		rightLineNumber++
 	}
 	return leftLineNumbers, rightLineNumbers
 }
@@ -239,7 +252,7 @@ func LineNumbersFromHunk(hunk *diff.Hunk, pairs []*LinePair, leftLines []string,
 
 	leftLineNumber := previousLeftLineNumber
 	rightLineNumber := previousRightLineNumber
-	for leftLineNumber < hunk.OrigStartLine -1 {
+	for leftLineNumber < hunk.OrigStartLine-1 {
 		leftLineInfo := MakeLineInfo(leftLineNumber, leftLines, contextSize)
 		rightLineInfo := MakeLineInfo(rightLineNumber, rightLines, contextSize)
 		pairs[leftLineNumber] = &LinePair{
