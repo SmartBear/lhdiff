@@ -3,9 +3,8 @@ package lhdiff
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-dedup/simhash"
 	"github.com/ianbruene/go-difflib/difflib"
-	"github.com/ka-weihe/fast-levenshtein"
+	levenshtein "github.com/ka-weihe/fast-levenshtein"
 	"github.com/sourcegraph/go-diff/diff"
 	"math"
 	"regexp"
@@ -19,31 +18,9 @@ type LineInfo struct {
 	context    string
 }
 
-func (lineInfo LineInfo) contextSimHash() uint64 {
-	sh := simhash.NewSimhash()
-	return sh.GetSimhash(sh.NewWordFeatureSet([]byte(lineInfo.context)))
-}
-
-func (lineInfo LineInfo) contentSimHash() uint64 {
-	sh := simhash.NewSimhash()
-	return sh.GetSimhash(sh.NewWordFeatureSet([]byte(lineInfo.content)))
-}
-
 type LinePair struct {
 	left  LineInfo
 	right LineInfo
-}
-
-func (linePair LinePair) contextSimhashHammingDistance() uint8 {
-	return simhash.Compare(linePair.left.contextSimHash(), linePair.right.contextSimHash())
-}
-
-func (linePair LinePair) contentSimhashHammingDistance() uint8 {
-	return simhash.Compare(linePair.left.contentSimHash(), linePair.right.contentSimHash())
-}
-
-func (linePair LinePair) combinedSimhashSimilarity() float64 {
-	return ContextSimilarityFactor*float64(linePair.contextSimhashHammingDistance())/HammingFactor + ContentSimilarityFactor*float64(linePair.contentSimhashHammingDistance())/HammingFactor
 }
 
 func (linePair LinePair) contentNormalizedLevenshteinSimilarity() float64 {
@@ -65,14 +42,6 @@ func (linePair LinePair) combinedSimilarity() float64 {
 	return ContentSimilarityFactor*contentSimilarity + ContextSimilarityFactor*contextSimilarity
 }
 
-type BySimhashSimilarity []*LinePair
-
-func (a BySimhashSimilarity) Len() int { return len(a) }
-func (a BySimhashSimilarity) Less(i, j int) bool {
-	return a[j].combinedSimhashSimilarity() < a[i].combinedSimhashSimilarity()
-}
-func (a BySimhashSimilarity) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-
 type ByCombinedSimilarity []*LinePair
 
 func (a ByCombinedSimilarity) Len() int { return len(a) }
@@ -84,8 +53,6 @@ func (a ByCombinedSimilarity) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 const ContextSimilarityFactor = 0.4
 const ContentSimilarityFactor = 0.6
 const SimilarityThreshold = 0.43
-const HammingFactor = 32.0
-const CandidateSize = 15
 
 func Lhdiff(left string, right string, contextSize int) []*LinePair {
 	leftLines := ConvertToLinesWithoutNewLine(left)
@@ -132,7 +99,7 @@ func Lhdiff(left string, right string, contextSize int) []*LinePair {
 			}
 		}
 	} else {
-		for leftLineNumber, _ := range leftLines {
+		for leftLineNumber := range leftLines {
 			lineInfo := MakeLineInfo(int32(leftLineNumber), leftLines, 4)
 			linePairs[leftLineNumber] = &LinePair{
 				left:  lineInfo,
@@ -161,7 +128,7 @@ func PrintLhdiff(left string, right string, contextSize int, lines bool) {
 func MakeLineInfos(lineNumbers []int32, lines []string, contextSize int) []LineInfo {
 	lineInfos := make([]LineInfo, len(lineNumbers))
 	for i, lineNumber := range lineNumbers {
-		lineInfos[i] = MakeLineInfo(int32(lineNumber), lines, contextSize)
+		lineInfos[i] = MakeLineInfo(lineNumber, lines, contextSize)
 	}
 	return lineInfos
 }
@@ -234,7 +201,7 @@ func LineNumbersFromDiff(fileDiff *diff.FileDiff, pairs []*LinePair, leftLines [
 	leftLineNumber := previousLeftLineNumber
 	rightLineNumber := previousRightLineNumber
 	for int(leftLineNumber) < len(leftLines) {
-		leftLineInfo := MakeLineInfo(int32(leftLineNumber), leftLines, contextSize)
+		leftLineInfo := MakeLineInfo(leftLineNumber, leftLines, contextSize)
 		rightLineInfo := MakeLineInfo(rightLineNumber, rightLines, contextSize)
 		pairs[leftLineNumber] = &LinePair{
 			left:  leftLineInfo,
