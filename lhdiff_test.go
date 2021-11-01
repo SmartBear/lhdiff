@@ -11,7 +11,7 @@ trois
 quatre
 `
 
-	PrintLhdiff(left, right, 4, false)
+	PrintLinePairs(Lhdiff(left, right, 4), false)
 
 	// Output:
 	// 1,_
@@ -26,7 +26,7 @@ two
 three
 four`
 
-	PrintLhdiff(left, left, 4, false)
+	PrintLinePairs(Lhdiff(left, left, 4), false)
 
 	// Output:
 	// 1,1
@@ -41,7 +41,7 @@ two
 three
 four`
 
-	PrintLhdiff("", right, 4, false)
+	PrintLinePairs(Lhdiff("", right, 4), false)
 
 	// Output:
 	// 1,_
@@ -53,7 +53,7 @@ two
 three
 four`
 
-	PrintLhdiff(left, "", 4, false)
+	PrintLinePairs(Lhdiff(left, "", 4), false)
 
 	// Output:
 	// 1,_
@@ -61,6 +61,29 @@ four`
 	// 3,_
 	// 4,_
 
+}
+
+func ExampleLhdiff_withReadmeExample() {
+	left := `one two three four
+eight
+nine ten eleven twelve
+thirteen fourteen fifteen`
+
+	right := `one two three four
+nine ten twelve
+five six BANANA seven eight
+APPLE PEAR
+thirteen fourteen fifteen
+`
+
+	linePairs := Lhdiff(left, right, 4)
+	PrintLinePairs(linePairs, false)
+
+	// Output:
+	//1,1
+	//2,_
+	//3,2
+	//4,5
 }
 
 func ExampleLhdiff_withSmallData() {
@@ -74,7 +97,7 @@ two
 one
 `
 
-	PrintLhdiff(left, right, 4, false)
+	PrintLinePairs(Lhdiff(left, right, 4), false)
 
 	// Output:
 	// 1,4
@@ -110,7 +133,7 @@ ten and a half
 eleven
 `
 
-	PrintLhdiff(left, right, 4, false)
+	PrintLinePairs(Lhdiff(left, right, 4), false)
 
 	// Output:
 	// 1,1
@@ -163,7 +186,7 @@ func ExampleLhdiff_withDataFromPaper() {
 }
 `
 
-	PrintLhdiff(left, right, 4, false)
+	PrintLinePairs(Lhdiff(left, right, 4), false)
 
 	// Output:
 	//1,1
@@ -222,7 +245,7 @@ func main() {
 }
 `
 
-	PrintLhdiff(left, right, 4, false)
+	PrintLinePairs(Lhdiff(left, right, 4), false)
 
 	// Output:
 	// 1,1
@@ -804,7 +827,7 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 }
 `
 	// https://github.com/aslakhellesoy/lhdiff/commit/4ae3495de0c31675940861592a3929df8154785f
-	PrintLhdiff(left, right, 4, false)
+	PrintLinePairs(Lhdiff(left, right, 4), false)
 
 	// Output:
 	//1,1

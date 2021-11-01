@@ -71,7 +71,6 @@ func Lhdiff(left string, right string, contextSize int) []*LinePair {
 	if diffScript != "" {
 		fileDiff, _ := diff.ParseFileDiff([]byte(diffScript))
 
-		// B. Detect Unchanged Lines
 		leftLineNumbers, rightLineNumbers := LineNumbersFromDiff(fileDiff, linePairs, leftLines, rightLines, contextSize)
 
 		leftLineInfos := MakeLineInfos(leftLineNumbers, leftLines, contextSize)
@@ -79,15 +78,11 @@ func Lhdiff(left string, right string, contextSize int) []*LinePair {
 
 		for _, rightLineInfo := range rightLineInfos {
 			var pairs []*LinePair
-			//pairs := make([]*LinePair)
 			for _, leftLineInfo := range leftLineInfos {
 				pair := &LinePair{
 					left:  leftLineInfo,
 					right: rightLineInfo,
 				}
-				//distance := pair.combinedSimhashSimilarity()
-				//fmt.Printf("Simash distance: %f\n", distance)
-				//pairs[l] = pair
 				pairs = append(pairs, pair)
 			}
 			sort.Sort(ByCombinedSimilarity(pairs))
@@ -99,6 +94,7 @@ func Lhdiff(left string, right string, contextSize int) []*LinePair {
 			}
 		}
 	} else {
+		// The files are identical
 		for leftLineNumber := range leftLines {
 			lineInfo := MakeLineInfo(int32(leftLineNumber), leftLines, 4)
 			linePairs[leftLineNumber] = &LinePair{
@@ -110,8 +106,7 @@ func Lhdiff(left string, right string, contextSize int) []*LinePair {
 	return linePairs
 }
 
-func PrintLhdiff(left string, right string, contextSize int, lines bool) {
-	linePairs := Lhdiff(left, right, contextSize)
+func PrintLinePairs(linePairs []*LinePair, lines bool) {
 	for lineNumber, pair := range linePairs {
 		if pair == nil {
 			fmt.Printf("%d,_\n", lineNumber+1)
@@ -178,10 +173,10 @@ func GetContext(lineNumber int32, lines []string, contextSize int) string {
 	return strings.Join(context, "")
 }
 
-// LineNumbersFromDiff returns three collections:
-// 1: a map of unchanged line numbers (from left to right)
-// 2: a slice of removed line numbers in left
-// 3: a slice of added line numbers in right
+// LineNumbersFromDiff returns two slices:
+// 1: a slice of removed line numbers in left
+// 2: a slice of added line numbers in right
+// It also adds entries to the pairs slice
 func LineNumbersFromDiff(fileDiff *diff.FileDiff, pairs []*LinePair, leftLines []string, rightLines []string, contextSize int) ([]int32, []int32) {
 	// Deleted from left
 	var leftLineNumbers []int32
@@ -231,9 +226,6 @@ func LineNumbersFromHunk(hunk *diff.Hunk, pairs []*LinePair, leftLines []string,
 	}
 
 	lines := bytes.Split(hunk.Body, []byte{'\n'})
-
-	//var leftLineNumber = int(hunk.OrigStartLine) - 1
-	//var rightLineNumber = int(hunk.NewStartLine) - 1
 
 	for _, line := range lines {
 		if len(line) == 0 {
