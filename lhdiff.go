@@ -52,7 +52,7 @@ func (a ByCombinedSimilarity) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 const ContextSimilarityFactor = 0.4
 const ContentSimilarityFactor = 0.6
-const SimilarityThreshold = 0.43
+const SimilarityThreshold = 0.45
 
 func Lhdiff(left string, right string, contextSize int) []*LinePair {
 	leftLines := ConvertToLinesWithoutNewLine(left)
