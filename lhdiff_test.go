@@ -236,7 +236,7 @@ func main() {
 	// 9,9
 	// 10,11
 	// 11,12
-	// 12,10
+	// 12,_
 	// 13,13
 	// 14,14
 	// 15,15
@@ -290,7 +290,7 @@ type LinePair struct {
 //	return simhash.Compare(linePair.left.contentSimHash(), linePair.right.contentSimHash())
 //}
 //
-//func (linePair LinePair) combinedSimhashDistance() float64 {
+//func (linePair LinePair) combinedSimhashSimilarity() float64 {
 //	return ContextSimilarityFactor*float64(linePair.contextSimhashHammingDistance()) + ContentSimilarityFactor*float64(linePair.contentSimhashHammingDistance())
 //}
 
@@ -376,7 +376,7 @@ func Compute(leftLineNumbers []int, leftLines []string, rightLineNumbers []int, 
 			}
 			pairs[l] = pair
 			//fmt.Printf("%d:%s -> %d:%s\n", pair.left.lineNumber, strings.TrimSpace(pair.left.content), pair.right.lineNumber, strings.TrimSpace(pair.right.content))
-			//fmt.Printf("  Distance (combined simhash) %f\n", pair.combinedSimhashDistance())
+			//fmt.Printf("  Distance (combined simhash) %f\n", pair.combinedSimhashSimilarity())
 			//fmt.Printf("  Similarity (content levenshtein) %f\n", pair.contentNormalizedLevenshteinSimilarity())
 			//fmt.Printf("  Similarity (context tf-idf cosine) %f\n", pair.contextTfIdfCosine())
 			//fmt.Printf("  Distance (combined) %f\n", pair.combinedSimilarity())
@@ -617,7 +617,7 @@ func Lhdiff(left string, right string, contextSize int) []*LinePair {
 				}
 				pairs[l] = pair
 				//fmt.Printf("%d:%s -> %d:%s\n", pair.left.lineNumber, strings.TrimSpace(pair.left.content), pair.right.lineNumber, strings.TrimSpace(pair.right.content))
-				//fmt.Printf("  Distance (combined simhash) %f\n", pair.combinedSimhashDistance())
+				//fmt.Printf("  Distance (combined simhash) %f\n", pair.combinedSimhashSimilarity())
 				//fmt.Printf("  Similarity (content levenshtein) %f\n", pair.contentNormalizedLevenshteinSimilarity())
 				//fmt.Printf("  Similarity (context tf-idf cosine) %f\n", pair.contextTfIdfCosineSimilarity())
 				//fmt.Printf("  Distance (combined) %f\n", pair.combinedSimilarity())
@@ -803,7 +803,7 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	return strings.TrimSpace(re.ReplaceAllString(s, " ")) + "\n"
 }
 `
-
+	// https://github.com/aslakhellesoy/lhdiff/commit/4ae3495de0c31675940861592a3929df8154785f
 	PrintLhdiff(left, right, 4, false)
 
 	// Output:
@@ -875,10 +875,10 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//66,42
 	//67,43
 	//68,_
-	//69,_
-	//70,_
-	//71,_
-	//72,_
+	//69,69
+	//70,70
+	//71,71
+	//72,72
 	//73,49
 	//74,50
 	//75,51
@@ -889,11 +889,11 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//80,58
 	//81,59
 	//82,_
-	//83,_
-	//84,_
-	//85,_
-	//86,_
-	//87,_
+	//83,83
+	//84,84
+	//85,85
+	//86,86
+	//87,87
 	//88,66
 	//89,67
 	//90,68
@@ -907,8 +907,8 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//98,115
 	//99,145
 	//100,_
-	//101,122
-	//102,120
+	//101,120
+	//102,122
 	//103,146
 	//104,124
 	//105,_
@@ -921,8 +921,8 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//112,_
 	//113,_
 	//114,_
-	//115,134
-	//116,_
+	//115,_
+	//116,134
 	//117,_
 	//118,_
 	//119,_
@@ -952,10 +952,10 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//143,94
 	//144,95
 	//145,_
-	//146,_
-	//147,_
-	//148,_
-	//149,_
+	//146,146
+	//147,147
+	//148,148
+	//149,149
 	//150,101
 	//151,102
 	//152,103
@@ -985,39 +985,39 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//176,157
 	//177,158
 	//178,_
-	//179,_
-	//180,_
-	//181,_
-	//182,_
-	//183,_
-	//184,_
-	//185,_
-	//186,_
-	//187,_
-	//188,_
-	//189,_
-	//190,_
-	//191,_
-	//192,_
-	//193,_
-	//194,_
-	//195,_
-	//196,_
-	//197,_
-	//198,_
-	//199,_
-	//200,_
-	//201,_
-	//202,_
-	//203,_
-	//204,_
-	//205,_
-	//206,_
-	//207,_
-	//208,_
-	//209,_
-	//210,_
-	//211,_
+	//179,179
+	//180,180
+	//181,181
+	//182,182
+	//183,183
+	//184,184
+	//185,185
+	//186,186
+	//187,187
+	//188,188
+	//189,189
+	//190,190
+	//191,191
+	//192,192
+	//193,193
+	//194,194
+	//195,195
+	//196,196
+	//197,197
+	//198,198
+	//199,199
+	//200,200
+	//201,201
+	//202,202
+	//203,203
+	//204,204
+	//205,205
+	//206,206
+	//207,207
+	//208,208
+	//209,209
+	//210,210
+	//211,211
 	//212,193
 	//213,194
 	//214,195
@@ -1028,7 +1028,7 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//219,198
 	//220,199
 	//221,_
-	//222,_
+	//222,222
 	//223,202
 	//224,203
 	//225,204
@@ -1055,19 +1055,19 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//246,221
 	//247,222
 	//248,_
-	//249,_
-	//250,_
-	//251,_
-	//252,_
-	//253,_
-	//254,_
-	//255,_
-	//256,_
-	//257,_
-	//258,_
-	//259,_
-	//260,_
-	//261,_
+	//249,249
+	//250,250
+	//251,251
+	//252,252
+	//253,253
+	//254,254
+	//255,255
+	//256,256
+	//257,257
+	//258,258
+	//259,259
+	//260,260
+	//261,261
 	//262,237
 	//263,238
 	//264,239

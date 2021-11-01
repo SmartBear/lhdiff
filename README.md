@@ -26,6 +26,10 @@ Example using git:
     <( git show 085519173c4e6e76c425dac0a628f21ff0cdcfa8:lhdiff.go ) \
     <( git show 4ae3495de0c31675940861592a3929df8154785f:lhdiff.go )
 
+# Related
+
+* [Incremental Origin Analysis of Source Code Files](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.721.548&rep=rep1&type=pdf)
+
 # LICENSE
 
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](http://www.opensource.org/licenses/MIT)
