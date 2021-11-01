@@ -1,6 +1,9 @@
 # lhdiff
 
-A Lightweight Hybrid Approach for Tracking Source Lines
+A Lightweight Hybrid Approach for Tracking Source Lines.
+
+Lhdiff provides a mapping of individual lines between two revisions of the same file. It provides a better mapping than
+Unix diff, and works independently of the file contents (programming language). See [ARCHITECTURE.md](ARCHITECTURE.md) for more details.
 
 ## Install
 

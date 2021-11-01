@@ -251,7 +251,6 @@ func LineNumbersFromHunk(hunk *diff.Hunk, pairs []*LinePair, leftLines []string,
 }
 
 func ConvertToLinesWithoutNewLine(text string) []string {
-	// See "A. Preprocess input files" in lhdiff-paper-long-version.pdf
 	return Map(difflib.SplitLines(text), RemoveMultipleSpaceAndTrim)
 }
 
