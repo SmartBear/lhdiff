@@ -40,6 +40,24 @@ four`
 	// 4,4
 }
 
+func ExampleLhdiff_withoutPrintingIdenticalLines() {
+	left := `one
+two
+three
+four`
+
+	right := `one
+three
+two
+four`
+	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
+
+	// Output:
+	// 2,3
+	// 3,2
+}
+
 func ExampleLhdiff_withEmptyLeft() {
 	right := `one
 two

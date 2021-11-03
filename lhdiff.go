@@ -120,17 +120,13 @@ func Lhdiff(left string, right string, contextSize int) (map[int]LinePair, int, 
 	return allPairs, len(leftLines), rightLineNumbers
 }
 
-func PrintLinePairs(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, lines bool) {
+func PrintLinePairs(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, omitSameLine bool) {
 	for leftLineNumber := 0; leftLineNumber < leftLineCount; leftLineNumber++ {
 		pair, exists := linePairs[leftLineNumber]
 		if !exists {
 			fmt.Printf("%d,_\n", leftLineNumber+1)
-		} else {
-			if lines {
-				fmt.Printf("%d:%s,%d:%s\n", leftLineNumber+1, strings.TrimSpace(pair.left.content), pair.right.lineNumber+1, strings.TrimSpace(pair.right.content))
-			} else {
-				fmt.Printf("%d,%d\n", leftLineNumber+1, pair.right.lineNumber+1)
-			}
+		} else if !omitSameLine || leftLineNumber != pair.right.lineNumber {
+			fmt.Printf("%d,%d\n", leftLineNumber+1, pair.right.lineNumber+1)
 		}
 	}
 	for _, rightLine := range newRightLines {
