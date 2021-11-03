@@ -42,7 +42,7 @@ func (linePair LinePair) combinedSimilarity() float64 {
 	return ContentSimilarityFactor*contentSimilarity + ContextSimilarityFactor*contextSimilarity
 }
 
-type ByCombinedSimilarity []*LinePair
+type ByCombinedSimilarity []LinePair
 
 func (a ByCombinedSimilarity) Len() int { return len(a) }
 func (a ByCombinedSimilarity) Less(i, j int) bool {
@@ -54,11 +54,12 @@ const ContextSimilarityFactor = 0.4
 const ContentSimilarityFactor = 0.6
 const SimilarityThreshold = 0.45
 
-func Lhdiff(left string, right string, contextSize int) []*LinePair {
+func Lhdiff(left string, right string, contextSize int) (map[int32]LinePair, int32, []int) {
 	leftLines := ConvertToLinesWithoutNewLine(left)
 	rightLines := ConvertToLinesWithoutNewLine(right)
 
-	linePairs := make([]*LinePair, len(leftLines))
+	mappedRightLines := make(map[int32]bool)
+	allPairs := make(map[int32]LinePair, 0)
 
 	diffScript, _ := difflib.GetUnifiedDiffString(difflib.LineDiffParams{
 		A:        leftLines,
@@ -71,25 +72,30 @@ func Lhdiff(left string, right string, contextSize int) []*LinePair {
 	if diffScript != "" {
 		fileDiff, _ := diff.ParseFileDiff([]byte(diffScript))
 
-		leftLineNumbers, rightLineNumbers := LineNumbersFromDiff(fileDiff, linePairs, leftLines, rightLines, contextSize)
+		unchangedDiffPairs, leftLineNumbers, rightLineNumbers := LineNumbersFromDiff(fileDiff, leftLines, rightLines, contextSize)
+		for _, unchangedDiffPair := range unchangedDiffPairs {
+			allPairs[unchangedDiffPair.left.lineNumber] = unchangedDiffPair
+			mappedRightLines[unchangedDiffPair.right.lineNumber] = true
+		}
 
 		leftLineInfos := MakeLineInfos(leftLineNumbers, leftLines, contextSize)
 		rightLineInfos := MakeLineInfos(rightLineNumbers, rightLines, contextSize)
 
 		for _, rightLineInfo := range rightLineInfos {
-			var pairs []*LinePair
+			var similarPairCandidates []LinePair
 			for _, leftLineInfo := range leftLineInfos {
-				pair := &LinePair{
+				pair := LinePair{
 					left:  leftLineInfo,
 					right: rightLineInfo,
 				}
-				pairs = append(pairs, pair)
+				similarPairCandidates = append(similarPairCandidates, pair)
 			}
-			sort.Sort(ByCombinedSimilarity(pairs))
-			if len(pairs) > 0 {
-				pair := pairs[0]
-				if pair.combinedSimilarity() > SimilarityThreshold {
-					linePairs[pair.left.lineNumber] = pair
+			sort.Sort(ByCombinedSimilarity(similarPairCandidates))
+			if len(similarPairCandidates) > 0 {
+				mostSimilarPair := similarPairCandidates[0]
+				if mostSimilarPair.combinedSimilarity() > SimilarityThreshold {
+					allPairs[mostSimilarPair.left.lineNumber] = mostSimilarPair
+					mappedRightLines[mostSimilarPair.right.lineNumber] = true
 				}
 			}
 		}
@@ -97,26 +103,38 @@ func Lhdiff(left string, right string, contextSize int) []*LinePair {
 		// The files are identical
 		for leftLineNumber := range leftLines {
 			lineInfo := MakeLineInfo(int32(leftLineNumber), leftLines, 4)
-			linePairs[leftLineNumber] = &LinePair{
+			allPairs[int32(leftLineNumber)] = LinePair{
 				left:  lineInfo,
 				right: lineInfo,
 			}
+			mappedRightLines[int32(leftLineNumber)] = true
 		}
 	}
-	return linePairs
+	rightLineNumbers := make([]int, 0)
+	for rightLineNumber, _ := range rightLines {
+		_,mapped := mappedRightLines[int32(rightLineNumber)]
+		if !mapped {
+			rightLineNumbers = append(rightLineNumbers, rightLineNumber)
+		}
+	}
+	return allPairs, int32(len(leftLines)), rightLineNumbers
 }
 
-func PrintLinePairs(linePairs []*LinePair, lines bool) {
-	for lineNumber, pair := range linePairs {
-		if pair == nil {
-			fmt.Printf("%d,_\n", lineNumber+1)
+func PrintLinePairs(linePairs map[int32]LinePair, leftLineCount int32, newRightLines []int, lines bool) {
+	for leftLineNumber := int32(0); leftLineNumber < leftLineCount; leftLineNumber++ {
+		pair, exists := linePairs[leftLineNumber]
+		if !exists {
+			fmt.Printf("%d,_\n", leftLineNumber+1)
 		} else {
 			if lines {
-				fmt.Printf("%d:%s,%d:%s\n", pair.left.lineNumber+1, strings.TrimSpace(pair.left.content), pair.right.lineNumber+1, strings.TrimSpace(pair.right.content))
+				fmt.Printf("%d:%s,%d:%s\n", leftLineNumber+1, strings.TrimSpace(pair.left.content), pair.right.lineNumber+1, strings.TrimSpace(pair.right.content))
 			} else {
-				fmt.Printf("%d,%d\n", pair.left.lineNumber+1, pair.right.lineNumber+1)
+				fmt.Printf("%d,%d\n", leftLineNumber+1, pair.right.lineNumber+1)
 			}
 		}
+	}
+	for _, rightLine := range newRightLines {
+		fmt.Printf("_,%d\n", rightLine+1)
 	}
 }
 
@@ -176,8 +194,9 @@ func GetContext(lineNumber int32, lines []string, contextSize int) string {
 // LineNumbersFromDiff returns two slices:
 // 1: a slice of removed line numbers in left
 // 2: a slice of added line numbers in right
-// It also adds entries to the pairs slice
-func LineNumbersFromDiff(fileDiff *diff.FileDiff, pairs []*LinePair, leftLines []string, rightLines []string, contextSize int) ([]int32, []int32) {
+// 3:
+func LineNumbersFromDiff(fileDiff *diff.FileDiff, leftLines []string, rightLines []string, contextSize int) ([]LinePair, []int32, []int32) {
+	var unchangedPairs []LinePair
 	// Deleted from left
 	var leftLineNumbers []int32
 	// Added to right
@@ -186,9 +205,10 @@ func LineNumbersFromDiff(fileDiff *diff.FileDiff, pairs []*LinePair, leftLines [
 	previousLeftLineNumber := int32(0)
 	previousRightLineNumber := int32(0)
 	for _, hunk := range fileDiff.Hunks {
-		leftLineNumbersHunk, rightLineNumbersHunk := LineNumbersFromHunk(hunk, pairs, leftLines, rightLines, previousLeftLineNumber, previousRightLineNumber, contextSize)
+		unchangedHunkPairs, leftLineNumbersHunk, rightLineNumbersHunk := LineNumbersFromHunk(hunk, leftLines, rightLines, previousLeftLineNumber, previousRightLineNumber, contextSize)
 		leftLineNumbers = append(leftLineNumbers, leftLineNumbersHunk...)
 		rightLineNumbers = append(rightLineNumbers, rightLineNumbersHunk...)
+		unchangedPairs = append(unchangedPairs, unchangedHunkPairs...)
 		previousLeftLineNumber = hunk.OrigStartLine - 1 + hunk.OrigLines
 		previousRightLineNumber = hunk.NewStartLine - 1 + hunk.NewLines
 	}
@@ -198,17 +218,18 @@ func LineNumbersFromDiff(fileDiff *diff.FileDiff, pairs []*LinePair, leftLines [
 	for int(leftLineNumber) < len(leftLines) {
 		leftLineInfo := MakeLineInfo(leftLineNumber, leftLines, contextSize)
 		rightLineInfo := MakeLineInfo(rightLineNumber, rightLines, contextSize)
-		pairs[leftLineNumber] = &LinePair{
+		unchangedPairs = append(unchangedPairs, LinePair{
 			left:  leftLineInfo,
 			right: rightLineInfo,
-		}
+		})
 		leftLineNumber++
 		rightLineNumber++
 	}
-	return leftLineNumbers, rightLineNumbers
+	return unchangedPairs, leftLineNumbers, rightLineNumbers
 }
 
-func LineNumbersFromHunk(hunk *diff.Hunk, pairs []*LinePair, leftLines []string, rightLines []string, previousLeftLineNumber int32, previousRightLineNumber int32, contextSize int) ([]int32, []int32) {
+func LineNumbersFromHunk(hunk *diff.Hunk, leftLines []string, rightLines []string, previousLeftLineNumber int32, previousRightLineNumber int32, contextSize int) ([]LinePair, []int32, []int32) {
+	var unchangedPairs []LinePair
 	var leftLineNumbers []int32
 	var rightLineNumbers []int32
 
@@ -217,10 +238,10 @@ func LineNumbersFromHunk(hunk *diff.Hunk, pairs []*LinePair, leftLines []string,
 	for leftLineNumber < hunk.OrigStartLine-1 {
 		leftLineInfo := MakeLineInfo(leftLineNumber, leftLines, contextSize)
 		rightLineInfo := MakeLineInfo(rightLineNumber, rightLines, contextSize)
-		pairs[leftLineNumber] = &LinePair{
+		unchangedPairs = append(unchangedPairs, LinePair{
 			left:  leftLineInfo,
 			right: rightLineInfo,
-		}
+		})
 		leftLineNumber++
 		rightLineNumber++
 	}
@@ -239,19 +260,20 @@ func LineNumbersFromHunk(hunk *diff.Hunk, pairs []*LinePair, leftLines []string,
 			rightLineNumbers = append(rightLineNumbers, rightLineNumber)
 			rightLineNumber++
 		default:
-			pairs[leftLineNumber] = &LinePair{
+			unchangedPairs = append(unchangedPairs, LinePair{
 				left:  MakeLineInfo(leftLineNumber, leftLines, contextSize),
 				right: MakeLineInfo(rightLineNumber, rightLines, contextSize),
-			}
+			})
 			leftLineNumber++
 			rightLineNumber++
 		}
 	}
-	return leftLineNumbers, rightLineNumbers
+	return unchangedPairs, leftLineNumbers, rightLineNumbers
 }
 
 func ConvertToLinesWithoutNewLine(text string) []string {
-	return Map(difflib.SplitLines(text), RemoveMultipleSpaceAndTrim)
+	lines := strings.SplitAfter(text, "\n")
+	return Map(lines, RemoveMultipleSpaceAndTrim)
 }
 
 func Map(vs []string, f func(string) string) []string {

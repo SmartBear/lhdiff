@@ -8,16 +8,20 @@ four`
 	right := `un
 deux
 trois
-quatre
-`
+quatre`
 
-	PrintLinePairs(Lhdiff(left, right, 4), false)
+	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
-	// 1,_
-	// 2,_
-	// 3,_
-	// 4,_
+	//1,_
+	//2,_
+	//3,_
+	//4,_
+	//_,1
+	//_,2
+	//_,3
+	//_,4
 }
 
 func ExampleLhdiff_withIdenticalLines() {
@@ -26,7 +30,8 @@ two
 three
 four`
 
-	PrintLinePairs(Lhdiff(left, left, 4), false)
+	pairs, leftCount, newRightLines := Lhdiff(left, left, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
 	// 1,1
@@ -41,10 +46,15 @@ two
 three
 four`
 
-	PrintLinePairs(Lhdiff("", right, 4), false)
+	pairs, leftCount, newRightLines := Lhdiff("", right, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
 	// 1,_
+	// _,1
+	// _,2
+	// _,3
+	// _,4
 }
 
 func ExampleLhdiff_withEmptyRight() {
@@ -53,13 +63,15 @@ two
 three
 four`
 
-	PrintLinePairs(Lhdiff(left, "", 4), false)
+	pairs, leftCount, newRightLines := Lhdiff(left, "", 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
-	// 1,_
-	// 2,_
-	// 3,_
-	// 4,_
+	//1,_
+	//2,_
+	//3,_
+	//4,_
+	//_,1
 
 }
 
@@ -73,17 +85,18 @@ thirteen fourteen fifteen`
 nine ten twelve
 five six BANANA seven eight
 APPLE PEAR
-thirteen fourteen fifteen
-`
+thirteen fourteen fifteen`
 
-	linePairs := Lhdiff(left, right, 4)
-	PrintLinePairs(linePairs, false)
+	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
 	//1,1
 	//2,_
 	//3,2
 	//4,5
+	//_,3
+	//_,4
 }
 
 func ExampleLhdiff_withSmallData() {
@@ -94,10 +107,10 @@ four`
 	right := `four
 three
 two
-one
-`
+one`
 
-	PrintLinePairs(Lhdiff(left, right, 4), false)
+	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
 	// 1,4
@@ -133,21 +146,23 @@ ten and a half
 eleven
 `
 
-	PrintLinePairs(Lhdiff(left, right, 4), false)
+	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
-	// 1,1
-	// 2,2
-	// 3,3
-	// 4,4
-	// 5,5
-	// 6,6
-	// 7,7
-	// 8,8
-	// 9,9
-	// 10,10
-	// 11,12
-	// 12,13
+	//1,1
+	//2,2
+	//3,3
+	//4,4
+	//5,5
+	//6,6
+	//7,7
+	//8,8
+	//9,9
+	//10,10
+	//11,12
+	//12,13
+	//_,11
 }
 
 func ExampleLhdiff_withDataFromPaper() {
@@ -186,7 +201,8 @@ func ExampleLhdiff_withDataFromPaper() {
 }
 `
 
-	PrintLinePairs(Lhdiff(left, right, 4), false)
+	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
 	//1,1
@@ -206,6 +222,15 @@ func ExampleLhdiff_withDataFromPaper() {
 	//15,_
 	//16,16
 	//17,17
+	//_,4
+	//_,5
+	//_,7
+	//_,8
+	//_,9
+	//_,11
+	//_,12
+	//_,13
+	//_,14
 }
 
 func ExampleLhdiff_withDataFromMainGo() {
@@ -245,26 +270,28 @@ func main() {
 }
 `
 
-	PrintLinePairs(Lhdiff(left, right, 4), false)
+	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
-	// 1,1
-	// 2,2
-	// 3,3
-	// 4,4
-	// 5,5
-	// 6,6
-	// 7,7
-	// 8,8
-	// 9,9
-	// 10,11
-	// 11,12
-	// 12,_
-	// 13,13
-	// 14,14
-	// 15,15
-	// 16,16
-	// 17,17
+	//1,1
+	//2,2
+	//3,3
+	//4,4
+	//5,5
+	//6,6
+	//7,7
+	//8,8
+	//9,9
+	//10,11
+	//11,12
+	//12,_
+	//13,13
+	//14,14
+	//15,15
+	//16,16
+	//17,17
+	//_,10
 }
 
 func ExampleLhdiff_withDataFromLhdiffGo() {
@@ -827,7 +854,8 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 }
 `
 	// https://github.com/aslakhellesoy/lhdiff/commit/4ae3495de0c31675940861592a3929df8154785f
-	PrintLinePairs(Lhdiff(left, right, 4), false)
+	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
 	//1,1
@@ -1120,4 +1148,25 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//288,266
 	//289,267
 	//290,268
+	//_,69
+	//_,109
+	//_,115
+	//_,116
+	//_,117
+	//_,125
+	//_,126
+	//_,127
+	//_,128
+	//_,131
+	//_,142
+	//_,147
+	//_,205
+	//_,206
+	//_,207
+	//_,208
+	//_,212
+	//_,219
+	//_,240
+	//_,241
+	//_,242
 }
