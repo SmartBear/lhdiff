@@ -13,7 +13,7 @@ import (
 )
 
 type LineInfo struct {
-	lineNumber int32
+	lineNumber int
 	content    string
 	context    string
 }
@@ -54,12 +54,12 @@ const ContextSimilarityFactor = 0.4
 const ContentSimilarityFactor = 0.6
 const SimilarityThreshold = 0.45
 
-func Lhdiff(left string, right string, contextSize int) (map[int32]LinePair, int32, []int) {
+func Lhdiff(left string, right string, contextSize int) (map[int]LinePair, int, []int) {
 	leftLines := ConvertToLinesWithoutNewLine(left)
 	rightLines := ConvertToLinesWithoutNewLine(right)
 
-	mappedRightLines := make(map[int32]bool)
-	allPairs := make(map[int32]LinePair, 0)
+	mappedRightLines := make(map[int]bool)
+	allPairs := make(map[int]LinePair, 0)
 
 	diffScript, _ := difflib.GetUnifiedDiffString(difflib.LineDiffParams{
 		A:        leftLines,
@@ -102,26 +102,26 @@ func Lhdiff(left string, right string, contextSize int) (map[int32]LinePair, int
 	} else {
 		// The files are identical
 		for leftLineNumber := range leftLines {
-			lineInfo := MakeLineInfo(int32(leftLineNumber), leftLines, 4)
-			allPairs[int32(leftLineNumber)] = LinePair{
+			lineInfo := MakeLineInfo(leftLineNumber, leftLines, 4)
+			allPairs[leftLineNumber] = LinePair{
 				left:  lineInfo,
 				right: lineInfo,
 			}
-			mappedRightLines[int32(leftLineNumber)] = true
+			mappedRightLines[leftLineNumber] = true
 		}
 	}
 	rightLineNumbers := make([]int, 0)
 	for rightLineNumber, _ := range rightLines {
-		_,mapped := mappedRightLines[int32(rightLineNumber)]
+		_,mapped := mappedRightLines[rightLineNumber]
 		if !mapped {
 			rightLineNumbers = append(rightLineNumbers, rightLineNumber)
 		}
 	}
-	return allPairs, int32(len(leftLines)), rightLineNumbers
+	return allPairs, len(leftLines), rightLineNumbers
 }
 
-func PrintLinePairs(linePairs map[int32]LinePair, leftLineCount int32, newRightLines []int, lines bool) {
-	for leftLineNumber := int32(0); leftLineNumber < leftLineCount; leftLineNumber++ {
+func PrintLinePairs(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, lines bool) {
+	for leftLineNumber := 0; leftLineNumber < leftLineCount; leftLineNumber++ {
 		pair, exists := linePairs[leftLineNumber]
 		if !exists {
 			fmt.Printf("%d,_\n", leftLineNumber+1)
@@ -138,7 +138,7 @@ func PrintLinePairs(linePairs map[int32]LinePair, leftLineCount int32, newRightL
 	}
 }
 
-func MakeLineInfos(lineNumbers []int32, lines []string, contextSize int) []LineInfo {
+func MakeLineInfos(lineNumbers []int, lines []string, contextSize int) []LineInfo {
 	lineInfos := make([]LineInfo, len(lineNumbers))
 	for i, lineNumber := range lineNumbers {
 		lineInfos[i] = MakeLineInfo(lineNumber, lines, contextSize)
@@ -146,7 +146,7 @@ func MakeLineInfos(lineNumbers []int32, lines []string, contextSize int) []LineI
 	return lineInfos
 }
 
-func MakeLineInfo(lineNumber int32, lines []string, contextSize int) LineInfo {
+func MakeLineInfo(lineNumber int, lines []string, contextSize int) LineInfo {
 	content := lines[lineNumber]
 	context := GetContext(lineNumber, lines, contextSize)
 	lineInfo := LineInfo{
@@ -162,10 +162,10 @@ var /* const */ brackets = regexp.MustCompile("^[{()}]$")
 // GetContext returns a string consisting of (up to) contextSize context lines above and below lineIndex.
 // a line is considered to be a context line if it is not an "insignificant" line, i.e. either blank
 // or just a curly brace or parenthesis (whitespace trimmed).
-func GetContext(lineNumber int32, lines []string, contextSize int) string {
+func GetContext(lineNumber int, lines []string, contextSize int) string {
 	var context []string
 
-	i := int(lineNumber) - 1
+	i := lineNumber - 1
 
 	for j := 0; i >= 0 && j < contextSize; {
 		line := lines[i]
@@ -177,7 +177,7 @@ func GetContext(lineNumber int32, lines []string, contextSize int) string {
 		i--
 	}
 
-	i = int(lineNumber) + 1
+	i = lineNumber + 1
 	for j := 0; i < len(lines) && j < contextSize; {
 		line := lines[i]
 		trimmed := strings.TrimSpace(line)
@@ -195,27 +195,27 @@ func GetContext(lineNumber int32, lines []string, contextSize int) string {
 // 1: a slice of removed line numbers in left
 // 2: a slice of added line numbers in right
 // 3:
-func LineNumbersFromDiff(fileDiff *diff.FileDiff, leftLines []string, rightLines []string, contextSize int) ([]LinePair, []int32, []int32) {
+func LineNumbersFromDiff(fileDiff *diff.FileDiff, leftLines []string, rightLines []string, contextSize int) ([]LinePair, []int, []int) {
 	var unchangedPairs []LinePair
 	// Deleted from left
-	var leftLineNumbers []int32
+	var leftLineNumbers []int
 	// Added to right
-	var rightLineNumbers []int32
+	var rightLineNumbers []int
 
-	previousLeftLineNumber := int32(0)
-	previousRightLineNumber := int32(0)
+	previousLeftLineNumber := 0
+	previousRightLineNumber := 0
 	for _, hunk := range fileDiff.Hunks {
 		unchangedHunkPairs, leftLineNumbersHunk, rightLineNumbersHunk := LineNumbersFromHunk(hunk, leftLines, rightLines, previousLeftLineNumber, previousRightLineNumber, contextSize)
 		leftLineNumbers = append(leftLineNumbers, leftLineNumbersHunk...)
 		rightLineNumbers = append(rightLineNumbers, rightLineNumbersHunk...)
 		unchangedPairs = append(unchangedPairs, unchangedHunkPairs...)
-		previousLeftLineNumber = hunk.OrigStartLine - 1 + hunk.OrigLines
-		previousRightLineNumber = hunk.NewStartLine - 1 + hunk.NewLines
+		previousLeftLineNumber = int(hunk.OrigStartLine - 1 + hunk.OrigLines)
+		previousRightLineNumber = int(hunk.NewStartLine - 1 + hunk.NewLines)
 	}
 	// Add unchanged lines after last hunk
 	leftLineNumber := previousLeftLineNumber
 	rightLineNumber := previousRightLineNumber
-	for int(leftLineNumber) < len(leftLines) {
+	for leftLineNumber < len(leftLines) {
 		leftLineInfo := MakeLineInfo(leftLineNumber, leftLines, contextSize)
 		rightLineInfo := MakeLineInfo(rightLineNumber, rightLines, contextSize)
 		unchangedPairs = append(unchangedPairs, LinePair{
@@ -228,14 +228,14 @@ func LineNumbersFromDiff(fileDiff *diff.FileDiff, leftLines []string, rightLines
 	return unchangedPairs, leftLineNumbers, rightLineNumbers
 }
 
-func LineNumbersFromHunk(hunk *diff.Hunk, leftLines []string, rightLines []string, previousLeftLineNumber int32, previousRightLineNumber int32, contextSize int) ([]LinePair, []int32, []int32) {
+func LineNumbersFromHunk(hunk *diff.Hunk, leftLines []string, rightLines []string, previousLeftLineNumber int, previousRightLineNumber int, contextSize int) ([]LinePair, []int, []int) {
 	var unchangedPairs []LinePair
-	var leftLineNumbers []int32
-	var rightLineNumbers []int32
+	var leftLineNumbers []int
+	var rightLineNumbers []int
 
 	leftLineNumber := previousLeftLineNumber
 	rightLineNumber := previousRightLineNumber
-	for leftLineNumber < hunk.OrigStartLine-1 {
+	for leftLineNumber < int(hunk.OrigStartLine)-1 {
 		leftLineInfo := MakeLineInfo(leftLineNumber, leftLines, contextSize)
 		rightLineInfo := MakeLineInfo(rightLineNumber, rightLines, contextSize)
 		unchangedPairs = append(unchangedPairs, LinePair{
