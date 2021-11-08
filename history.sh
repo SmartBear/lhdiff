@@ -4,6 +4,7 @@
 #
 set -e
 IFS=$'\n'
+NL=$'\n'
 
 sqlite3 lines.db <<EOF
 CREATE TABLE IF NOT EXISTS lines (
@@ -29,6 +30,7 @@ EOF
 
 # Loop over all commits, starting with the oldest revision
 for sha in $(git log --reverse --pretty=format:"%h"); do
+
   # Loop over all files in the commit. We're interested in the files with one of the following formats:
   #   M    file                  # Modified file.
   #   Rn   oldfile   newfile     # Renamed file. The n represents the similarity. 100 means no content change.
@@ -48,49 +50,75 @@ for sha in $(git log --reverse --pretty=format:"%h"); do
     fi
     # TODO: handle deleted files - we should delete all relevant rows
 
-#    if [[ $newFile != "cmd/lhdiff/main.go" ]]; then
-#      continue
-#    fi
+    if [[ $newFile != "cmd/lhdiff/main.go" ]]; then
+      continue
+    fi
 
     if [[ ${doLhdiff} = true ]]; then
+      echo "----- ${sha}"
       pairs=$(lhdiff --omit <(git show $sha^1:$oldFile) <(git show $sha:$newFile))
-      # echo "$pairs"
+#      echo "$pairs"
+
+      lineIdsToRemove="'dummy'"
+      insertStatements=""
+
       for pair in $pairs; do
-        # echo "$pair"
+        echo "$pair"
         oldLineNumber=$(echo $pair | cut -f1 -d,)
         newLineNumber=$(echo $pair | cut -f2 -d,)
+        oldLineId=''
+        newLineId=''
 
-        if [ ${oldLineNumber} == "_" ]; then
-          # Added
-          sqlite3 -echo lines.db "DELETE FROM lines WHERE file='${newFile}' AND line_number=${newLineNumber};"
-          lineId=$(uuidgen)
-          sqlite3 -echo lines.db "INSERT INTO lines (line_id, file, line_number, sha) VALUES ('${lineId}', '${newFile}', ${newLineNumber}, '${sha}');"
+        # echo "${oldLineNumber} - ${newLineNumber}"
 
-          lineNumber=${newLineNumber}
-          type="A"
-        elif [[ ${newLineNumber} != "_" ]]; then
-          # Modified
-          sqlite3 -echo lines.db "DELETE FROM lines WHERE file='${newFile}' AND line_number=${newLineNumber};"
-          lineId=$(sqlite3 lines.db "SELECT line_id FROM lines WHERE file='${oldFile}' AND line_number=${oldLineNumber} AND sha IS NOT '${sha}';")
-          if [[ -z ${lineId} ]]; then
-            lineId=$(uuidgen)
-          else
-            sqlite3 -echo lines.db "DELETE FROM lines WHERE line_id='${lineId}';"
+        if [[ ${oldLineNumber} != "_" ]]; then
+          oldLineId=$(sqlite3 lines.db "SELECT line_id FROM lines WHERE file='${oldFile}' AND line_number=${oldLineNumber};")
+          if [[ ! -z ${oldLineId} ]]; then
+            lineIdsToRemove="${lineIdsToRemove},${NL} '${oldLineId}'"
           fi
-          sqlite3 -echo lines.db "INSERT INTO lines (line_id, file, line_number, sha) VALUES ('${lineId}', '${newFile}', ${newLineNumber}, '${sha}');"
-
-          lineNumber=${newLineNumber}
-          type="M"
-        else
-          # Deleted
-          lineId=$(uuidgen)
-          sqlite3 -echo lines.db "DELETE FROM lines WHERE file='${oldFile}' AND line_number=${oldLineNumber};"
-          lineNumber=""
-          type="D"
         fi
 
-        sqlite3 -echo lines.db "INSERT INTO changes (line_id, file, line_number, sha, type) VALUES ('${lineId}', '${newFile}', ${lineNumber:-"NULL"}, '${sha}', '${type}');"
+        if [[ ${newLineNumber} != "_" ]]; then
+          newLineId=$(sqlite3 lines.db "SELECT line_id FROM lines WHERE file='${newFile}' AND line_number=${newLineNumber};")
+          if [[ ! -z ${newLineId} ]]; then
+            lineIdsToRemove="${lineIdsToRemove},${NL} '${newLineId}', '__'"
+#          else
+#            newLineId="${sha}:${newFile}:${newLineNumber}"
+          fi
+        fi
+
+        if [[ ${oldLineNumber} != "_" && ${newLineNumber}  = '_' ]]; then
+          # Deleted
+          type="D"
+        else
+          # Modified or Added
+          if [[ ! -z ${oldLineId} ]]; then
+            sql="INSERT INTO lines (line_id, file, line_number, sha) VALUES ('${oldLineId}', '${newFile}', ${newLineNumber}, '${sha}');;"
+            insertStatements="${insertStatements}${NL}${sql}"
+          else
+            newLineId="${sha}:${newFile}:${newLineNumber}"
+            sql="INSERT INTO lines (line_id, file, line_number, sha) VALUES ('${newLineId}', '${newFile}', ${newLineNumber}, '${sha}');"
+            insertStatements="${insertStatements}${NL}${sql}"
+          fi
+
+          if [[ ${oldLineNumber} != "_" && ${newLineNumber} != "_" ]]; then
+            # Modified
+            type="M"
+          elif [[ -z ${oldLineNumber} && ${newLineNumber} != "_" ]]; then
+            # Added
+            type="A"
+          fi
+        fi
       done
+
+      if [[ ${lineIdsToRemove} != "'dummy'" ]]; then
+        sqlite3 -echo lines.db "DELETE FROM lines where line_id IN (${lineIdsToRemove});"
+      fi
+      if [[ ${insertStatements} != '' ]]; then
+        echo "${insertStatements}"
+        echo "----"
+        sqlite3 -echo lines.db "${insertStatements}"
+      fi
     fi
   done
 done
