@@ -50,24 +50,25 @@ for sha in $(git log --reverse --pretty=format:"%h"); do
     fi
     # TODO: handle deleted files - we should delete all relevant rows
 
-    if [[ $newFile != "cmd/lhdiff/main.go" ]]; then
-      continue
-    fi
+#    if [[ $newFile != "go.mod" ]]; then
+#      continue
+#    fi
 
     if [[ ${doLhdiff} = true ]]; then
-      echo "----- ${sha}"
+#      echo "----- ${sha}"
       pairs=$(lhdiff --omit <(git show $sha^1:$oldFile) <(git show $sha:$newFile))
-#      echo "$pairs"
+      # echo "$pairs"
 
-      lineIdsToRemove="'dummy'"
+      lineIdsToRemove="''"
       insertStatements=""
 
       for pair in $pairs; do
-        echo "$pair"
+#        echo "$pair"
         oldLineNumber=$(echo $pair | cut -f1 -d,)
         newLineNumber=$(echo $pair | cut -f2 -d,)
         oldLineId=''
         newLineId=''
+        lineId=''
 
         # echo "${oldLineNumber} - ${newLineNumber}"
 
@@ -81,43 +82,61 @@ for sha in $(git log --reverse --pretty=format:"%h"); do
         if [[ ${newLineNumber} != "_" ]]; then
           newLineId=$(sqlite3 lines.db "SELECT line_id FROM lines WHERE file='${newFile}' AND line_number=${newLineNumber};")
           if [[ ! -z ${newLineId} ]]; then
-            lineIdsToRemove="${lineIdsToRemove},${NL} '${newLineId}', '__'"
-#          else
-#            newLineId="${sha}:${newFile}:${newLineNumber}"
+            lineIdsToRemove="${lineIdsToRemove},${NL} '${newLineId}'"
+          else
+            newLineId="${sha}:${newFile}:${newLineNumber}"
           fi
         fi
 
-        if [[ ${oldLineNumber} != "_" && ${newLineNumber}  = '_' ]]; then
+        if [[ ${oldLineNumber} != "_" && ${newLineNumber} = '_' ]]; then
           # Deleted
+          if [[ ! -z ${oldLineId} ]]; then
+            lineId="${oldLineId}"
+          fi
           type="D"
         else
           # Modified or Added
           if [[ ! -z ${oldLineId} ]]; then
-            sql="INSERT INTO lines (line_id, file, line_number, sha) VALUES ('${oldLineId}', '${newFile}', ${newLineNumber}, '${sha}');;"
-            insertStatements="${insertStatements}${NL}${sql}"
+            lineId="${oldLineId}"
           else
-            newLineId="${sha}:${newFile}:${newLineNumber}"
-            sql="INSERT INTO lines (line_id, file, line_number, sha) VALUES ('${newLineId}', '${newFile}', ${newLineNumber}, '${sha}');"
-            insertStatements="${insertStatements}${NL}${sql}"
+            lineId="${sha}:${newFile}:${newLineNumber}"
           fi
+          sql="INSERT INTO lines (line_id, file, line_number, sha) VALUES ('${lineId}', '${newFile}', ${newLineNumber}, '${sha}');"
+          insertStatements="${insertStatements}${NL}${sql}"
 
           if [[ ${oldLineNumber} != "_" && ${newLineNumber} != "_" ]]; then
             # Modified
             type="M"
-          elif [[ -z ${oldLineNumber} && ${newLineNumber} != "_" ]]; then
+          elif [[ ${oldLineNumber} = "_" && ${newLineNumber} != "_" ]]; then
             # Added
             type="A"
           fi
         fi
+
+        if [[ ! -z ${lineId} ]]; then
+          if [[ ${type} = 'D' ]]; then
+            lineNumber=NULL
+          else
+            lineNumber=${newLineNumber}
+          fi
+          sql="INSERT INTO changes (line_id, file, line_number, sha, type) VALUES ('${lineId}', '${newFile}', ${lineNumber}, '${sha}', '${type}');"
+          insertStatements="${insertStatements}${NL}${sql}"
+        fi
       done
 
-      if [[ ${lineIdsToRemove} != "'dummy'" ]]; then
-        sqlite3 -echo lines.db "DELETE FROM lines where line_id IN (${lineIdsToRemove});"
-      fi
-      if [[ ${insertStatements} != '' ]]; then
-        echo "${insertStatements}"
-        echo "----"
-        sqlite3 -echo lines.db "${insertStatements}"
+      if [[ ${lineIdsToRemove} != "''" || ${insertStatements} != '' ]]; then
+        sql="BEGIN;${NL}"
+        if [[ ${lineIdsToRemove} != "''" ]]; then
+          sql="${sql}DELETE FROM lines where line_id IN (${lineIdsToRemove});${NL}"
+        fi
+        if [[ ${insertStatements} != '' ]]; then
+          sql="${sql}${insertStatements}${NL}"
+        fi
+        sql="${sql}COMMIT;${NL}"
+
+        echo "${sql}"
+
+        sqlite3 -echo lines.db "${sql}"
       fi
     fi
   done
