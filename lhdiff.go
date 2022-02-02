@@ -111,7 +111,7 @@ func Lhdiff(left string, right string, contextSize int) (map[int]LinePair, int, 
 		}
 	}
 	rightLineNumbers := make([]int, 0)
-	for rightLineNumber, _ := range rightLines {
+	for rightLineNumber := range rightLines {
 		_,mapped := mappedRightLines[rightLineNumber]
 		if !mapped {
 			rightLineNumbers = append(rightLineNumbers, rightLineNumber)
