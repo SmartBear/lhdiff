@@ -273,7 +273,7 @@ func ExampleLhdiff_withDataFromMainGo() {
 
 import (
 	"flag"
-	"github.com/aslakhellesoy/lhdiff"
+	"github.com/SmartBear/lhdiff"
 	"io/ioutil"
 )
 
@@ -291,7 +291,7 @@ func main() {
 
 import (
 	"flag"
-	"github.com/aslakhellesoy/lhdiff"
+	"github.com/SmartBear/lhdiff"
 	"io/ioutil"
 )
 
@@ -888,7 +888,7 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	return strings.TrimSpace(re.ReplaceAllString(s, " ")) + "\n"
 }
 `
-	// https://github.com/aslakhellesoy/lhdiff/commit/4ae3495de0c31675940861592a3929df8154785f
+	// https://github.com/SmartBear/lhdiff/commit/4ae3495de0c31675940861592a3929df8154785f
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
 	PrintLinePairs(pairs, leftCount, newRightLines, true)
 

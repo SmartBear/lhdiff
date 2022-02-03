@@ -7,7 +7,7 @@ Unix diff, and works independently of the file contents (programming language). 
 
 ## Install
 
-    go get github.com/aslakhellesoy/lhdiff
+    go get github.com/SmartBear/lhdiff
 
 To install from source, see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
@@ -17,15 +17,15 @@ There are two ways to use lhdiff - as a commandline program, or as a library
 
 ### Command line
 
-    lhdiff left right
+    lhdiff [--compact] left right
 
 Example using git:
 
-    lhdiff --omit \
+    lhdiff --compact \
     <( git show 400a62e39d39d231d8160002dfb7ed95a004278b:cmd/lhdiff/main.go ) \
     <( git show 35f1ba7b554d69a07e59d6f69297d08599f4217c:cmd/lhdiff/main.go )
 
-    lhdiff --omit \
+    lhdiff --compact \
     <( git show 085519173c4e6e76c425dac0a628f21ff0cdcfa8:lhdiff.go ) \
     <( git show 4ae3495de0c31675940861592a3929df8154785f:lhdiff.go )
 

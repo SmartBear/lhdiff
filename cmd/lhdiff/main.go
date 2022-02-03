@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/aslakhellesoy/lhdiff"
+	"github.com/SmartBear/lhdiff"
 	"io/ioutil"
 )
 

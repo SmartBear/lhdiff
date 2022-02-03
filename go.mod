@@ -1,4 +1,4 @@
-module github.com/aslakhellesoy/lhdiff
+module github.com/SmartBear/lhdiff
 
 go 1.17
 
