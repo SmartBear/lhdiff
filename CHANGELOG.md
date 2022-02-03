@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2022-02-03
 ### Added
 - Add `-compact` option to exclude identical lines from output
 
@@ -17,5 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - First functional version
 
-[Unreleased]: https://github.com/aslakhellesoy/lhdiff/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/aslakhellesoy/lhdiff/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/aslakhellesoy/lhdiff/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/aslakhellesoy/lhdiff/compare/6084d5de2ec3dbb25767433e79ab840d5941c2de...v0.0.1
