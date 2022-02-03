@@ -11,7 +11,7 @@ trois
 quatre`
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
 
 	// Output:
 	//1,_
@@ -31,7 +31,7 @@ three
 four`
 
 	pairs, leftCount, newRightLines := Lhdiff(left, left, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
 
 	// Output:
 	// 1,1
@@ -51,11 +51,28 @@ three
 two
 four`
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
 
 	// Output:
 	// 2,3
 	// 3,2
+}
+
+func ExampleLhdiff_withoutPrintingIdenticalLinesWithChangedLines() {
+	left := `one
+two
+three
+four`
+
+	right := `one
+two
+three x
+four`
+	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
+	PrintLinePairs(pairs, leftCount, newRightLines, false)
+
+	// Output:
+	// 3,3
 }
 
 func ExampleLhdiff_withEmptyLeft() {
@@ -65,7 +82,7 @@ three
 four`
 
 	pairs, leftCount, newRightLines := Lhdiff("", right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
 
 	// Output:
 	// 1,_
@@ -82,7 +99,7 @@ three
 four`
 
 	pairs, leftCount, newRightLines := Lhdiff(left, "", 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
 
 	// Output:
 	//1,_
@@ -106,7 +123,7 @@ APPLE PEAR
 thirteen fourteen fifteen`
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
 
 	// Output:
 	//1,1
@@ -128,7 +145,7 @@ two
 one`
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
 
 	// Output:
 	// 1,4
@@ -165,7 +182,7 @@ eleven
 `
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
 
 	// Output:
 	//1,1
@@ -220,7 +237,7 @@ func ExampleLhdiff_withDataFromPaper() {
 `
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
 
 	// Output:
 	//1,1
@@ -289,7 +306,7 @@ func main() {
 `
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
 
 	// Output:
 	//1,1
@@ -873,7 +890,7 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 `
 	// https://github.com/aslakhellesoy/lhdiff/commit/4ae3495de0c31675940861592a3929df8154785f
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintLinePairs(pairs, leftCount, newRightLines, true)
 
 	// Output:
 	//1,1

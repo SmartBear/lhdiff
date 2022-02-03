@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Add option to omit same lines in output
+- Add `-compact` option to exclude identical lines from output
 
 ### Changed
 - Print new lines in right file
