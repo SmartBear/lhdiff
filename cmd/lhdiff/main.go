@@ -13,6 +13,7 @@ func main() {
 	rightFile := flag.Arg(1)
 	left, _ := ioutil.ReadFile(leftFile)
 	right, _ := ioutil.ReadFile(rightFile)
-	linePairs, leftCount, newRightLines := lhdiff.Lhdiff(string(left), string(right), 4)
-	lhdiff.PrintLinePairs(linePairs, leftCount, newRightLines, !*compact)
+	mappings := lhdiff.Lhdiff(string(left), string(right), 4, !*compact)
+	lhdiff.PrintMappings(mappings)
 }
+

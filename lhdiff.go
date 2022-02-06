@@ -2,12 +2,14 @@ package lhdiff
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/ianbruene/go-difflib/difflib"
 	levenshtein "github.com/ka-weihe/fast-levenshtein"
 	"github.com/sourcegraph/go-diff/diff"
 	"math"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -53,7 +55,7 @@ const ContextSimilarityFactor = 0.4
 const ContentSimilarityFactor = 0.6
 const SimilarityThreshold = 0.45
 
-func Lhdiff(left string, right string, contextSize int) (map[int]LinePair, int, []int) {
+func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bool) [][]int {
 	leftLines := ConvertToLinesWithoutNewLine(left)
 	rightLines := ConvertToLinesWithoutNewLine(right)
 
@@ -116,10 +118,10 @@ func Lhdiff(left string, right string, contextSize int) (map[int]LinePair, int, 
 			rightLineNumbers = append(rightLineNumbers, rightLineNumber)
 		}
 	}
-	return allPairs, len(leftLines), rightLineNumbers
+	return lineMappings(allPairs, len(leftLines), rightLineNumbers, includeIdenticalLines)
 }
 
-func LineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, includeIdenticalLines bool) [][]int {
+func lineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, includeIdenticalLines bool) [][]int {
 	lines := make([][]int, 0)
 	for leftLineNumber := 0; leftLineNumber < leftLineCount; leftLineNumber++ {
 		pair, exists := linePairs[leftLineNumber]
@@ -286,4 +288,20 @@ func Map(vs []string, f func(string) string) []string {
 func RemoveMultipleSpaceAndTrim(s string) string {
 	re := regexp.MustCompile("[ \t]+")
 	return strings.TrimSpace(re.ReplaceAllString(s, " ")) + "\n"
+}
+
+func PrintMappings(mappings [][]int) {
+	for _, mapping := range mappings {
+		fmt.Printf("%s,%s\n", toString(mapping[0]), toString(mapping[1]))
+	}
+}
+
+func toString(i int) string {
+	var left string
+	if i == -1 {
+		left = "_"
+	} else {
+		left = strconv.Itoa(i + 1)
+	}
+	return left
 }
