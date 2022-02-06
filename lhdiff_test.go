@@ -1,5 +1,10 @@
 package lhdiff
 
+import (
+	"fmt"
+	"strconv"
+)
+
 func ExampleLhdiff_withUnrelatedLines() {
 	left := `one
 two
@@ -11,7 +16,7 @@ trois
 quatre`
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, true))
 
 	// Output:
 	//1,_
@@ -31,7 +36,7 @@ three
 four`
 
 	pairs, leftCount, newRightLines := Lhdiff(left, left, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, true))
 
 	// Output:
 	// 1,1
@@ -51,7 +56,7 @@ three
 two
 four`
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, false))
 
 	// Output:
 	// 2,3
@@ -69,7 +74,7 @@ two
 three x
 four`
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, false)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, false))
 
 	// Output:
 	// 3,3
@@ -82,7 +87,7 @@ three
 four`
 
 	pairs, leftCount, newRightLines := Lhdiff("", right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, true))
 
 	// Output:
 	// 1,_
@@ -99,7 +104,7 @@ three
 four`
 
 	pairs, leftCount, newRightLines := Lhdiff(left, "", 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, true))
 
 	// Output:
 	//1,_
@@ -123,7 +128,7 @@ APPLE PEAR
 thirteen fourteen fifteen`
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, true))
 
 	// Output:
 	//1,1
@@ -145,7 +150,7 @@ two
 one`
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, true))
 
 	// Output:
 	// 1,4
@@ -182,7 +187,7 @@ eleven
 `
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, true))
 
 	// Output:
 	//1,1
@@ -237,7 +242,7 @@ func ExampleLhdiff_withDataFromPaper() {
 `
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, true))
 
 	// Output:
 	//1,1
@@ -306,7 +311,7 @@ func main() {
 `
 
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, true))
 
 	// Output:
 	//1,1
@@ -890,7 +895,7 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 `
 	// https://github.com/SmartBear/lhdiff/commit/4ae3495de0c31675940861592a3929df8154785f
 	pairs, leftCount, newRightLines := Lhdiff(left, right, 4)
-	PrintLinePairs(pairs, leftCount, newRightLines, true)
+	PrintMappings(LineMappings(pairs, leftCount, newRightLines, true))
 
 	// Output:
 	//1,1
@@ -1204,4 +1209,20 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//_,240
 	//_,241
 	//_,242
+}
+
+func PrintMappings(mappings [][]int) {
+	for _, mapping := range mappings {
+		fmt.Printf("%s,%s\n", toString(mapping[0]), toString(mapping[1]))
+	}
+}
+
+func toString(i int) string {
+	var left string
+	if i == -1 {
+		left = "_"
+	} else {
+		left = strconv.Itoa(i + 1)
+	}
+	return left
 }

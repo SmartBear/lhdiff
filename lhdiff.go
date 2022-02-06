@@ -2,7 +2,6 @@ package lhdiff
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/ianbruene/go-difflib/difflib"
 	levenshtein "github.com/ka-weihe/fast-levenshtein"
 	"github.com/sourcegraph/go-diff/diff"
@@ -120,20 +119,22 @@ func Lhdiff(left string, right string, contextSize int) (map[int]LinePair, int, 
 	return allPairs, len(leftLines), rightLineNumbers
 }
 
-func PrintLinePairs(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, includeIdenticalLines bool) {
+func LineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, includeIdenticalLines bool) [][]int {
+	lines := make([][]int, 0)
 	for leftLineNumber := 0; leftLineNumber < leftLineCount; leftLineNumber++ {
 		pair, exists := linePairs[leftLineNumber]
 		if !exists {
-			fmt.Printf("%d,_\n", leftLineNumber+1)
+			lines = append(lines, []int{leftLineNumber, -1})
 		} else {
 			if includeIdenticalLines || !(pair.left.content == pair.right.content && leftLineNumber == pair.right.lineNumber) {
-				fmt.Printf("%d,%d\n", leftLineNumber+1, pair.right.lineNumber+1)
+				lines = append(lines, []int{leftLineNumber, pair.right.lineNumber})
 			}
 		}
 	}
 	for _, rightLine := range newRightLines {
-		fmt.Printf("_,%d\n", rightLine+1)
+		lines = append(lines, []int{-1, rightLine})
 	}
+	return lines
 }
 
 func MakeLineInfos(lineNumbers []int, lines []string, contextSize int) []LineInfo {
