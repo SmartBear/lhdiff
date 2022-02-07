@@ -1,5 +1,10 @@
 package lhdiff
 
+import (
+	"fmt"
+	"os"
+)
+
 func ExampleLhdiff_withUnrelatedLines() {
 	left := `one
 two
@@ -10,8 +15,10 @@ deux
 trois
 quatre`
 
-	mappings := Lhdiff(left, right, 4, true)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, right, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	//1,_
@@ -30,8 +37,10 @@ two
 three
 four`
 
-	mappings := Lhdiff(left, left, 4, true)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, left, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	// 1,1
@@ -50,8 +59,10 @@ four`
 three
 two
 four`
-	mappings := Lhdiff(left, right, 4, false)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, right, 4, false)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	// 2,3
@@ -68,8 +79,10 @@ four`
 two
 three x
 four`
-	mappings := Lhdiff(left, right, 4, false)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, right, 4, false)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	// 3,3
@@ -81,8 +94,10 @@ two
 three
 four`
 
-	mappings := Lhdiff("", right, 4, true)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff("", right, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	// 1,_
@@ -98,8 +113,10 @@ two
 three
 four`
 
-	mappings := Lhdiff(left, "", 4, true)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, "", 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	//1,_
@@ -122,8 +139,10 @@ five six BANANA seven eight
 APPLE PEAR
 thirteen fourteen fifteen`
 
-	mappings := Lhdiff(left, right, 4, true)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, right, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	//1,1
@@ -144,8 +163,10 @@ three
 two
 one`
 
-	mappings := Lhdiff(left, right, 4, true)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, right, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	// 1,4
@@ -181,8 +202,10 @@ ten and a half
 eleven
 `
 
-	mappings := Lhdiff(left, right, 4, true)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, right, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	//1,1
@@ -236,8 +259,10 @@ func ExampleLhdiff_withDataFromPaper() {
 }
 `
 
-	mappings := Lhdiff(left, right, 4, true)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, right, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	//1,1
@@ -305,8 +330,10 @@ func main() {
 }
 `
 
-	mappings := Lhdiff(left, right, 4, true)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, right, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	//1,1
@@ -889,8 +916,10 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 }
 `
 	// https://github.com/SmartBear/lhdiff/commit/4ae3495de0c31675940861592a3929df8154785f
-	mappings := Lhdiff(left, right, 4, true)
-	PrintMappings(mappings)
+	mappings, err := Lhdiff(left, right, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
 
 	// Output:
 	//1,1
@@ -1204,4 +1233,10 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//_,240
 	//_,241
 	//_,242
+}
+
+func printErr(err error) {
+	if err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
+	}
 }

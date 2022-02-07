@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Return error from `Lhdiff`
+- CLI prints errors
+
 ## [0.0.5] - 2022-02-06
 ### Changed
 - The `Lhdiff` function returns `[][]int`

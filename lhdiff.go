@@ -55,23 +55,28 @@ const ContextSimilarityFactor = 0.4
 const ContentSimilarityFactor = 0.6
 const SimilarityThreshold = 0.45
 
-func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bool) [][]int {
+func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bool) ([][]int, error) {
 	leftLines := ConvertToLinesWithoutNewLine(left)
 	rightLines := ConvertToLinesWithoutNewLine(right)
 
 	mappedRightLines := make(map[int]bool)
 	allPairs := make(map[int]LinePair, 0)
 
-	diffScript, _ := difflib.GetUnifiedDiffString(difflib.LineDiffParams{
+	diffScript, err := difflib.GetUnifiedDiffString(difflib.LineDiffParams{
 		A:        leftLines,
 		B:        rightLines,
 		FromFile: "left",
 		ToFile:   "right",
 		Context:  3,
 	})
-	// fmt.Println(diffScript)
+	if err != nil {
+		return nil, err
+	}
 	if diffScript != "" {
-		fileDiff, _ := diff.ParseFileDiff([]byte(diffScript))
+		fileDiff, err := diff.ParseFileDiff([]byte(diffScript))
+		if err != nil {
+			return nil, err
+		}
 
 		unchangedDiffPairs, leftLineNumbers, rightLineNumbers := LineNumbersFromDiff(fileDiff, leftLines, rightLines, contextSize)
 		for _, unchangedDiffPair := range unchangedDiffPairs {
@@ -113,12 +118,12 @@ func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bo
 	}
 	rightLineNumbers := make([]int, 0)
 	for rightLineNumber := range rightLines {
-		_,mapped := mappedRightLines[rightLineNumber]
+		_, mapped := mappedRightLines[rightLineNumber]
 		if !mapped {
 			rightLineNumbers = append(rightLineNumbers, rightLineNumber)
 		}
 	}
-	return lineMappings(allPairs, len(leftLines), rightLineNumbers, includeIdenticalLines)
+	return lineMappings(allPairs, len(leftLines), rightLineNumbers, includeIdenticalLines), nil
 }
 
 func lineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, includeIdenticalLines bool) [][]int {
@@ -290,10 +295,14 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	return strings.TrimSpace(re.ReplaceAllString(s, " ")) + "\n"
 }
 
-func PrintMappings(mappings [][]int) {
+func PrintMappings(mappings [][]int) error {
 	for _, mapping := range mappings {
-		fmt.Printf("%s,%s\n", toString(mapping[0]), toString(mapping[1]))
+		_, err := fmt.Printf("%s,%s\n", toString(mapping[0]), toString(mapping[1]))
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func toString(i int) string {
