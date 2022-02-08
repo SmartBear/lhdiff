@@ -1,3 +1,4 @@
+[![Test](https://github.com/SmartBear/lhdiff/actions/workflows/test.yml/badge.svg)](https://github.com/SmartBear/lhdiff/actions/workflows/test.yml)
 # lhdiff
 
 A Lightweight Hybrid Approach for Tracking Source Lines.
