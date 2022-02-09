@@ -20,8 +20,8 @@ type LineInfo struct {
 }
 
 type LinePair struct {
-	left  LineInfo
-	right LineInfo
+	left  *LineInfo
+	right *LineInfo
 }
 
 func (linePair LinePair) contentNormalizedLevenshteinSimilarity() float64 {
@@ -69,6 +69,7 @@ func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bo
 		ToFile:   "right",
 		Context:  3,
 	})
+	//fmt.Println(diffScript)
 	if err != nil {
 		return nil, err
 	}
@@ -144,18 +145,18 @@ func lineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLines [
 	return lines
 }
 
-func MakeLineInfos(lineNumbers []int, lines []string, contextSize int) []LineInfo {
-	lineInfos := make([]LineInfo, len(lineNumbers))
+func MakeLineInfos(lineNumbers []int, lines []string, contextSize int) []*LineInfo {
+	lineInfos := make([]*LineInfo, len(lineNumbers))
 	for i, lineNumber := range lineNumbers {
 		lineInfos[i] = MakeLineInfo(lineNumber, lines, contextSize)
 	}
 	return lineInfos
 }
 
-func MakeLineInfo(lineNumber int, lines []string, contextSize int) LineInfo {
+func MakeLineInfo(lineNumber int, lines []string, contextSize int) *LineInfo {
 	content := lines[lineNumber]
 	context := GetContext(lineNumber, lines, contextSize)
-	lineInfo := LineInfo{
+	lineInfo := &LineInfo{
 		lineNumber: lineNumber,
 		context:    context,
 		content:    content,
@@ -221,7 +222,7 @@ func LineNumbersFromDiff(fileDiff *diff.FileDiff, leftLines []string, rightLines
 	// Add unchanged lines after last hunk
 	leftLineNumber := previousLeftLineNumber
 	rightLineNumber := previousRightLineNumber
-	for leftLineNumber < len(leftLines) {
+	for leftLineNumber >= 0 && leftLineNumber < len(leftLines) {
 		leftLineInfo := MakeLineInfo(leftLineNumber, leftLines, contextSize)
 		rightLineInfo := MakeLineInfo(rightLineNumber, rightLines, contextSize)
 		unchangedPairs = append(unchangedPairs, LinePair{
@@ -236,8 +237,8 @@ func LineNumbersFromDiff(fileDiff *diff.FileDiff, leftLines []string, rightLines
 
 func LineNumbersFromHunk(hunk *diff.Hunk, leftLines []string, rightLines []string, previousLeftLineNumber int, previousRightLineNumber int, contextSize int) ([]LinePair, []int, []int) {
 	var unchangedPairs []LinePair
-	var leftLineNumbers []int
-	var rightLineNumbers []int
+	leftLineNumbers := make([]int, 0)
+	rightLineNumbers := make([]int, 0)
 
 	leftLineNumber := previousLeftLineNumber
 	rightLineNumber := previousRightLineNumber
@@ -278,6 +279,9 @@ func LineNumbersFromHunk(hunk *diff.Hunk, leftLines []string, rightLines []strin
 }
 
 func ConvertToLinesWithoutNewLine(text string) []string {
+	if text == "" {
+		return make([]string, 0)
+	}
 	lines := strings.SplitAfter(text, "\n")
 	return Map(lines, RemoveMultipleSpaceAndTrim)
 }

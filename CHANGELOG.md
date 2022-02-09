@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Don't consider empty files to have any lines
+
+## [0.1.0] - 2022-02-07
 ### Changed
 - Return error from `Lhdiff`
 - CLI prints errors
@@ -34,7 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - First functional version
 
-[Unreleased]: https://github.com/SmartBear/lhdiff/compare/v0.0.5...HEAD
+[Unreleased]: https://github.com/SmartBear/lhdiff/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/SmartBear/lhdiff/compare/v0.0.5...v0.1.0
 [0.0.5]: https://github.com/SmartBear/lhdiff/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/SmartBear/lhdiff/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/SmartBear/lhdiff/compare/v0.0.2...v0.0.3
