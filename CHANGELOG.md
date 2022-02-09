@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2022-02-09
 ### Fixed
 - Don't consider empty files to have any lines
 
@@ -38,7 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - First functional version
 
-[Unreleased]: https://github.com/SmartBear/lhdiff/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/SmartBear/lhdiff/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/SmartBear/lhdiff/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/SmartBear/lhdiff/compare/v0.0.5...v0.1.0
 [0.0.5]: https://github.com/SmartBear/lhdiff/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/SmartBear/lhdiff/compare/v0.0.3...v0.0.4
