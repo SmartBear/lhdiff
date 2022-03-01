@@ -20,6 +20,9 @@ func TfIdfCosineSimilarity(docA string, docB string) float64 {
 	)
 	allTokens = append(allTokens, tokensA...)
 	allTokens = append(allTokens, tokensB...)
+	if len(allTokens) == 0 {
+		return 1
+	}
 	var documentFrequency = map[string]int{}
 	for _, token := range allTokens {
 		if documentFrequency[token] == 0 {

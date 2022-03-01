@@ -88,6 +88,33 @@ four`
 	// 3,3
 }
 
+func ExampleLhdiff_oneDifferentLineWithNewLine() {
+	left := "a\n"
+	right := "b\n"
+	mappings, err := Lhdiff(left, right, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
+
+	// Output:
+	// 1,_
+	// 2,2
+	// _,1
+}
+
+func ExampleLhdiff_oneModifiedLineWithNewLine() {
+	left := "a b c d\n"
+	right := "a b c d e\n"
+	mappings, err := Lhdiff(left, right, 4, true)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
+
+	// Output:
+	// 1,1
+	// 2,2
+}
+
 func ExampleLhdiff_withEmptyLeft() {
 	right := `one
 two
