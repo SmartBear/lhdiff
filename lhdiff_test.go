@@ -323,7 +323,7 @@ func ExampleLhdiff_withDataFromMainGo() {
 
 import (
 	"flag"
-	"github.com/SmartBear/lhdiff"
+	"github.com/oselvar/lhdiff"
 	"io/ioutil"
 )
 
@@ -341,7 +341,7 @@ func main() {
 
 import (
 	"flag"
-	"github.com/SmartBear/lhdiff"
+	"github.com/oselvar/lhdiff"
 	"io/ioutil"
 )
 
@@ -387,7 +387,7 @@ func ExampleLhdiff_withDataFromLhdiffGo() {
 import (
 	"bytes"
 	"fmt"
-	"github.com/ianbruene/go-difflib/difflib"
+	"github.com/mongodb-forks/go-difflib/difflib"
 	t "github.com/rexsimiloluwah/distance_metrics/text"
 	"github.com/sourcegraph/go-diff/diff"
 	"math"
@@ -677,7 +677,7 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 import (
 	"bytes"
 	"fmt"
-	"github.com/ianbruene/go-difflib/difflib"
+	"github.com/mongodb-forks/go-difflib/difflib"
 	t "github.com/rexsimiloluwah/distance_metrics/text"
 	"github.com/sourcegraph/go-diff/diff"
 	"math"
@@ -940,7 +940,7 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	return strings.TrimSpace(re.ReplaceAllString(s, " ")) + "\n"
 }
 `
-	// https://github.com/SmartBear/lhdiff/commit/4ae3495de0c31675940861592a3929df8154785f
+	// https://github.com/oselvar/lhdiff/commit/4ae3495de0c31675940861592a3929df8154785f
 	mappings, err := Lhdiff(left, right, 4, true)
 	printErr(err)
 	err = PrintMappings(mappings)
@@ -1061,8 +1061,8 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//112,_
 	//113,_
 	//114,_
-	//115,_
-	//116,134
+	//115,134
+	//116,_
 	//117,_
 	//118,_
 	//119,_

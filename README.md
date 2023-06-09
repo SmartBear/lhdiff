@@ -1,4 +1,4 @@
-[![Test](https://github.com/SmartBear/lhdiff/actions/workflows/test.yml/badge.svg)](https://github.com/SmartBear/lhdiff/actions/workflows/test.yml)
+[![Test](https://github.com/oselvar/lhdiff/actions/workflows/test.yml/badge.svg)](https://github.com/oselvar/lhdiff/actions/workflows/test.yml)
 # lhdiff
 
 A Lightweight Hybrid Approach for Tracking Source Lines.
@@ -8,7 +8,7 @@ Unix diff, and works independently of the file contents (programming language). 
 
 ## Install
 
-    go get github.com/SmartBear/lhdiff
+    go get github.com/oselvar/lhdiff
 
 To install from source, see [CONTRIBUTING.md](./CONTRIBUTING.md)
 

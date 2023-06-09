@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.3] - 2022-02-03
 ### Changed
-- Change module name from `github.com/aslakhellesoy/lhdiff` to `github.com/SmartBear/lhdiff`
+- Change module name from `github.com/aslakhellesoy/lhdiff` to `github.com/oselvar/lhdiff`
 
 ## [0.0.2] - 2022-02-03
 ### Added
@@ -43,12 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - First functional version
 
-[Unreleased]: https://github.com/SmartBear/lhdiff/compare/v0.1.2...HEAD
-[0.1.2]: https://github.com/SmartBear/lhdiff/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/SmartBear/lhdiff/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/SmartBear/lhdiff/compare/v0.0.5...v0.1.0
-[0.0.5]: https://github.com/SmartBear/lhdiff/compare/v0.0.4...v0.0.5
-[0.0.4]: https://github.com/SmartBear/lhdiff/compare/v0.0.3...v0.0.4
-[0.0.3]: https://github.com/SmartBear/lhdiff/compare/v0.0.2...v0.0.3
-[0.0.2]: https://github.com/SmartBear/lhdiff/compare/v0.0.1...v0.0.2
-[0.0.1]: https://github.com/SmartBear/lhdiff/compare/6084d5de2ec3dbb25767433e79ab840d5941c2de...v0.0.1
+[Unreleased]: https://github.com/oselvar/lhdiff/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/oselvar/lhdiff/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/oselvar/lhdiff/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/oselvar/lhdiff/compare/v0.0.5...v0.1.0
+[0.0.5]: https://github.com/oselvar/lhdiff/compare/v0.0.4...v0.0.5
+[0.0.4]: https://github.com/oselvar/lhdiff/compare/v0.0.3...v0.0.4
+[0.0.3]: https://github.com/oselvar/lhdiff/compare/v0.0.2...v0.0.3
+[0.0.2]: https://github.com/oselvar/lhdiff/compare/v0.0.1...v0.0.2
+[0.0.1]: https://github.com/oselvar/lhdiff/compare/6084d5de2ec3dbb25767433e79ab840d5941c2de...v0.0.1

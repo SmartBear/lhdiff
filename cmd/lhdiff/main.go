@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/SmartBear/lhdiff"
 	"io/ioutil"
 	"os"
+
+	"github.com/oselvar/lhdiff"
 )
 
 func main() {

@@ -3,14 +3,15 @@ package lhdiff
 import (
 	"bytes"
 	"fmt"
-	"github.com/ianbruene/go-difflib/difflib"
-	levenshtein "github.com/ka-weihe/fast-levenshtein"
-	"github.com/sourcegraph/go-diff/diff"
 	"math"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+
+	levenshtein "github.com/ka-weihe/fast-levenshtein"
+	"github.com/mongodb-forks/go-difflib/difflib"
+	"github.com/sourcegraph/go-diff/diff"
 )
 
 type LineInfo struct {
