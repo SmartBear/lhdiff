@@ -56,6 +56,22 @@ const ContextSimilarityFactor = 0.4
 const ContentSimilarityFactor = 0.6
 const SimilarityThreshold = 0.45
 
+/**
+ * Returns a list of mappings between the lines of the left and right file.
+ * Each mapping is a pair of line numbers, where -1 indicates that the line is not present in the file.
+ * The mappings are sorted by the line number of the left file.
+ * If includeIdenticalLines is true, then lines that are identical in both files are included in the mappings.
+ * Otherwise, only lines that are not identical are included.
+ * The contextSize parameter determines how many lines of context are used to determine the similarity of lines.
+ * The context lines are not included in the mappings.
+ * The context lines are lines that are not blank and do not consist of only curly braces or parenthesis.
+ * The context lines are used to determine the similarity of lines.
+ * The similarity of lines is determined by a combination of the normalized Levenshtein distance of the content of the lines and the cosine similarity of the context of the lines.
+ * The similarity of lines is only considered if it is above a certain threshold.
+ * The mappings are determined by first finding the unchanged lines using the difflib library.
+ * Then, for each line in the right file, the most similar line in the left file is found.
+ * The most similar line is the line with the highest combined similarity.
+ */
 func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bool) ([][]int, error) {
 	leftLines := ConvertToLinesWithoutNewLine(left)
 	rightLines := ConvertToLinesWithoutNewLine(right)
@@ -125,25 +141,25 @@ func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bo
 			rightLineNumbers = append(rightLineNumbers, rightLineNumber)
 		}
 	}
-	return lineMappings(allPairs, len(leftLines), rightLineNumbers, includeIdenticalLines), nil
+	return makeLineMappings(allPairs, len(leftLines), rightLineNumbers, includeIdenticalLines), nil
 }
 
-func lineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, includeIdenticalLines bool) [][]int {
-	lines := make([][]int, 0)
+func makeLineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, includeIdenticalLines bool) [][]int {
+	lineMappings := make([][]int, 0)
 	for leftLineNumber := 0; leftLineNumber < leftLineCount; leftLineNumber++ {
 		pair, exists := linePairs[leftLineNumber]
 		if !exists {
-			lines = append(lines, []int{leftLineNumber, -1})
+			lineMappings = append(lineMappings, []int{leftLineNumber, -1})
 		} else {
 			if includeIdenticalLines || !(pair.left.content == pair.right.content && leftLineNumber == pair.right.lineNumber) {
-				lines = append(lines, []int{leftLineNumber, pair.right.lineNumber})
+				lineMappings = append(lineMappings, []int{leftLineNumber, pair.right.lineNumber})
 			}
 		}
 	}
 	for _, rightLine := range newRightLines {
-		lines = append(lines, []int{-1, rightLine})
+		lineMappings = append(lineMappings, []int{-1, rightLine})
 	}
-	return lines
+	return lineMappings
 }
 
 func MakeLineInfos(lineNumbers []int, lines []string, contextSize int) []*LineInfo {
