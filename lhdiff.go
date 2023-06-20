@@ -72,7 +72,7 @@ const SimilarityThreshold = 0.45
  * Then, for each line in the right file, the most similar line in the left file is found.
  * The most similar line is the line with the highest combined similarity.
  */
-func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bool) ([][]int, error) {
+func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bool) ([][]uint32, error) {
 	leftLines := ConvertToLinesWithoutNewLine(left)
 	rightLines := ConvertToLinesWithoutNewLine(right)
 
@@ -144,20 +144,20 @@ func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bo
 	return makeLineMappings(allPairs, len(leftLines), rightLineNumbers, includeIdenticalLines), nil
 }
 
-func makeLineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, includeIdenticalLines bool) [][]int {
-	lineMappings := make([][]int, 0)
+func makeLineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, includeIdenticalLines bool) [][]uint32 {
+	lineMappings := make([][]uint32, 0)
 	for leftLineNumber := 0; leftLineNumber < leftLineCount; leftLineNumber++ {
 		pair, exists := linePairs[leftLineNumber]
 		if !exists {
-			lineMappings = append(lineMappings, []int{leftLineNumber + 1, -1})
+			lineMappings = append(lineMappings, []uint32{uint32(leftLineNumber + 1), 0})
 		} else {
 			if includeIdenticalLines || !(pair.left.content == pair.right.content && leftLineNumber == pair.right.lineNumber) {
-				lineMappings = append(lineMappings, []int{leftLineNumber + 1, pair.right.lineNumber + 1})
+				lineMappings = append(lineMappings, []uint32{uint32(leftLineNumber + 1), uint32(pair.right.lineNumber + 1)})
 			}
 		}
 	}
 	for _, rightLine := range newRightLines {
-		lineMappings = append(lineMappings, []int{-1, rightLine + 1})
+		lineMappings = append(lineMappings, []uint32{0, uint32(rightLine + 1)})
 	}
 	return lineMappings
 }
@@ -316,7 +316,7 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	return strings.TrimSpace(re.ReplaceAllString(s, " ")) + "\n"
 }
 
-func PrintMappings(mappings [][]int) error {
+func PrintMappings(mappings [][]uint32) error {
 	for _, mapping := range mappings {
 		_, err := fmt.Printf("%s,%s\n", toString(mapping[0]), toString(mapping[1]))
 		if err != nil {
@@ -326,12 +326,12 @@ func PrintMappings(mappings [][]int) error {
 	return nil
 }
 
-func toString(i int) string {
+func toString(i uint32) string {
 	var left string
-	if i == -1 {
+	if i == 0 {
 		left = "_"
 	} else {
-		left = strconv.Itoa(i)
+		left = strconv.FormatUint(uint64(i), 10)
 	}
 	return left
 }
