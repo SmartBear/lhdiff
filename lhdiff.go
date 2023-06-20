@@ -149,15 +149,15 @@ func makeLineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLin
 	for leftLineNumber := 0; leftLineNumber < leftLineCount; leftLineNumber++ {
 		pair, exists := linePairs[leftLineNumber]
 		if !exists {
-			lineMappings = append(lineMappings, []int{leftLineNumber, -1})
+			lineMappings = append(lineMappings, []int{leftLineNumber + 1, -1})
 		} else {
 			if includeIdenticalLines || !(pair.left.content == pair.right.content && leftLineNumber == pair.right.lineNumber) {
-				lineMappings = append(lineMappings, []int{leftLineNumber, pair.right.lineNumber})
+				lineMappings = append(lineMappings, []int{leftLineNumber + 1, pair.right.lineNumber + 1})
 			}
 		}
 	}
 	for _, rightLine := range newRightLines {
-		lineMappings = append(lineMappings, []int{-1, rightLine})
+		lineMappings = append(lineMappings, []int{-1, rightLine + 1})
 	}
 	return lineMappings
 }
@@ -331,7 +331,7 @@ func toString(i int) string {
 	if i == -1 {
 		left = "_"
 	} else {
-		left = strconv.Itoa(i + 1)
+		left = strconv.Itoa(i)
 	}
 	return left
 }
