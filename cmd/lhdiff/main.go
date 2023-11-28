@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/oselvar/lhdiff"
@@ -14,8 +13,8 @@ func main() {
 	flag.Parse()
 	leftFile := flag.Arg(0)
 	rightFile := flag.Arg(1)
-	left, _ := ioutil.ReadFile(leftFile)
-	right, _ := ioutil.ReadFile(rightFile)
+	left, _ := os.ReadFile(leftFile)
+	right, _ := os.ReadFile(rightFile)
 	mappings, err := lhdiff.Lhdiff(string(left), string(right), 4, !*compact)
 
 	if err != nil {
