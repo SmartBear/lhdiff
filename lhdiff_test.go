@@ -1260,6 +1260,36 @@ func RemoveMultipleSpaceAndTrim(s string) string {
 	//_,242
 }
 
+func ExampleLhdiff_withDataFromTestDataTypeScript() {
+	left, err := os.ReadFile("testdata/typescript-1800-loc/new")
+	right, err := os.ReadFile("testdata/typescript-1800-loc/old")
+
+	mappings, err := Lhdiff(string(left), string(right), 4, false)
+	printErr(err)
+	err = PrintMappings(mappings)
+	printErr(err)
+
+	// Output:
+	//1,1
+	//2,2
+	//3,3
+	//4,4
+	//5,5
+	//6,6
+	//7,7
+	//8,8
+	//9,9
+	//10,11
+	//11,12
+	//12,_
+	//13,13
+	//14,14
+	//15,15
+	//16,16
+	//17,17
+	//_,10
+}
+
 func printErr(err error) {
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())

@@ -105,6 +105,11 @@ func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bo
 		leftLineInfos := MakeLineInfos(leftLineNumbers, leftLines, contextSize)
 		rightLineInfos := MakeLineInfos(rightLineNumbers, rightLines, contextSize)
 
+		// TODO: We have combinatorial explosion here....
+		// See section D in the paper about simhash
+		// We need to compute that here.
+		// See HDiffSHMatching.match - line 287-293
+		// Maybe do this in parallel?
 		for _, rightLineInfo := range rightLineInfos {
 			var similarPairCandidates []LinePair
 			for _, leftLineInfo := range leftLineInfos {
@@ -145,6 +150,7 @@ func Lhdiff(left string, right string, contextSize int, includeIdenticalLines bo
 }
 
 func makeLineMappings(linePairs map[int]LinePair, leftLineCount int, newRightLines []int, includeIdenticalLines bool) [][]uint32 {
+	fmt.Println("linePairs:", len(linePairs))
 	lineMappings := make([][]uint32, 0)
 	for leftLineNumber := 0; leftLineNumber < leftLineCount; leftLineNumber++ {
 		pair, exists := linePairs[leftLineNumber]

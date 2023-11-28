@@ -1,0 +1,1559 @@
+import type { OpenAPIObject } from 'openapi3-ts/oas31';
+
+export const openapi: OpenAPIObject = {
+  openapi: '3.1.0',
+  info: {
+    title: 'Test Bank API',
+    version: '0.1.0',
+    description:
+      'The Test Bank API provides the following functionality:\n\n* Store changesets (training data)\n* Store verdicts (training data)\n* Request a TCP',
+  },
+  servers: [
+    {
+      url: 'http://localhost:3001',
+    },
+  ],
+  tags: [
+    {
+      name: 'Projects',
+      description: 'Project related endpoints',
+    },
+    {
+      name: 'Repos',
+      description: 'Repo related endpoints',
+    },
+    {
+      name: 'Versions',
+      description: 'Version related endpoints',
+    },
+    {
+      name: 'Changesets',
+      description: 'Changeset related endpoints',
+    },
+    {
+      name: 'Verdicts',
+      description: 'Verdict related endpoints',
+    },
+    {
+      name: 'TCP',
+      description: 'TCP related endpoints',
+    },
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    },
+    schemas: {
+      ProjectInsert: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'The display name of the project.',
+          },
+        },
+        required: ['name'],
+        description: 'The properties of a project to create.',
+      },
+      RepoInsert: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'The display name of the repo.',
+          },
+        },
+        required: ['name'],
+        description: 'The properties of a repo to create.',
+      },
+      VersionRow: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            pattern: '[\\d]+',
+            description: 'The ID of the Version',
+          },
+          name: {
+            type: 'string',
+            description: 'The display name of the version.',
+          },
+        },
+        required: ['id', 'name'],
+        description: 'The created version.',
+      },
+      VersionInsert: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'The display name of the version.',
+          },
+        },
+        required: ['name'],
+        description: 'The properties of a version to create.',
+      },
+      RepoTest: {
+        type: 'object',
+        properties: {
+          path: {
+            type: 'string',
+            description: 'The path to the test file, relative to the root of the git repo.',
+          },
+          line: {
+            type: 'integer',
+            description: 'The line number where the test is defined. This is 1-indexed.',
+          },
+          name: {
+            type: 'string',
+            description:
+              'The name of the test. This is purely informational and will be shown in the UI.',
+          },
+        },
+        required: ['path', 'line', 'name'],
+        description: 'A single test case originating from a file in a git repo.',
+      },
+      RepoTestTcpOutput: {
+        type: 'object',
+        properties: {
+          orderedRepoTests: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/RepoTest',
+            },
+          },
+        },
+        required: ['orderedRepoTests'],
+      },
+      TestLine: {
+        type: 'object',
+        properties: {
+          line: {
+            type: 'integer',
+            description: 'The line number where the test is defined. This is 1-indexed.',
+          },
+          name: {
+            type: 'string',
+            description:
+              'The name of the test. This is purely informational and will be shown in the UI.',
+          },
+        },
+        required: ['line', 'name'],
+        description: 'A test line describes a single test, defined on a specific line in a file.',
+      },
+      TestFile: {
+        type: 'object',
+        properties: {
+          path: {
+            type: 'string',
+          },
+          testLines: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/TestLine',
+            },
+          },
+        },
+        required: ['path', 'testLines'],
+        description: 'A test file is a file containing one or more tests.',
+      },
+      TestRepoTcpInput: {
+        type: 'object',
+        properties: {
+          testFiles: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/TestFile',
+            },
+          },
+        },
+        required: ['testFiles'],
+        description:
+          'TCP input for repos where automated tests and SUT are stored in different repos.',
+      },
+      ApfdMetric: {
+        type: 'object',
+        properties: {
+          apfd: {
+            type: 'number',
+          },
+          apfdData: {
+            type: 'array',
+            items: {
+              type: 'number',
+            },
+          },
+        },
+        required: ['apfd', 'apfdData'],
+      },
+      ApfdMetrics: {
+        type: 'object',
+        properties: {
+          identity: {
+            $ref: '#/components/schemas/ApfdMetric',
+          },
+          optimal: {
+            $ref: '#/components/schemas/ApfdMetric',
+          },
+          worst: {
+            $ref: '#/components/schemas/ApfdMetric',
+          },
+          random: {
+            $ref: '#/components/schemas/ApfdMetric',
+          },
+        },
+        required: ['identity', 'optimal', 'worst', 'random'],
+      },
+      VerdictsOutput: {
+        type: 'object',
+        properties: {
+          metrics: {
+            $ref: '#/components/schemas/ApfdMetrics',
+          },
+        },
+        required: ['metrics'],
+      },
+      ExternalTest: {
+        type: 'object',
+        properties: {
+          externalId: {
+            type: 'string',
+            description:
+              'The external ID of the test. This must be specified if the test is not an automated test under source control. The ID must be unique within the project.',
+          },
+          name: {
+            type: 'string',
+            description:
+              'The name of the test. This is purely informational and will be shown in the UI.',
+          },
+        },
+        required: ['externalId', 'name'],
+        description: 'A single test case originating from outside of a git repo.',
+      },
+      ExternalVerdict: {
+        type: 'object',
+        properties: {
+          externalTest: {
+            $ref: '#/components/schemas/ExternalTest',
+          },
+          status: {
+            type: 'string',
+            enum: ['passed', 'failed', 'unknown'],
+            description: 'The status of the test.',
+          },
+        },
+        required: ['externalTest', 'status'],
+        description: 'The verdict of an external test, i.e. whether it passed or failed.',
+      },
+      ChangesetOutput: {
+        type: 'object',
+        properties: {
+          repoId: {
+            type: 'string',
+            pattern: '[\\d]+',
+            description: 'The ID of the Project',
+          },
+          changesetId: {
+            type: 'string',
+            pattern: '[\\d]+',
+            description: 'The ID of the Changeset',
+          },
+        },
+        required: ['repoId', 'changesetId'],
+      },
+      LineChange: {
+        type: 'object',
+        properties: {
+          oldLine: {
+            type: 'integer',
+            description:
+              'The line number before the change. 0 means the line did not exist before the change (it has been added).',
+          },
+          newLine: {
+            type: 'integer',
+            description:
+              'The line number after the change. 0 means the line did not exist after the change (it has been removed).',
+          },
+          cyclomate: {
+            type: 'boolean',
+            description:
+              'Whether the new line adds cyclomatic complexity. For example, if it is an if/for statement.',
+          },
+        },
+        required: ['oldLine', 'newLine'],
+        description:
+          'A line change describes a change to a line between two git revisions. Line numbers are 1-indexed.',
+      },
+      FileChange: {
+        type: 'object',
+        properties: {
+          oldPath: {
+            type: 'string',
+            description:
+              'The path to the file before the change. The path is relative to the root of the git repo.',
+          },
+          newPath: {
+            type: 'string',
+            description:
+              'The path to the file after the change. The path is relative to the root of the git repo.',
+          },
+          lineChanges: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/LineChange',
+            },
+            description: 'The changed lines.',
+          },
+        },
+        required: ['oldPath', 'newPath', 'lineChanges'],
+        description: 'A file change describes a change to a file between two git revisions.',
+      },
+      Changeset: {
+        type: 'object',
+        properties: {
+          parentSha: {
+            type: 'string',
+            description: 'Git commit SHA',
+          },
+          sha: {
+            type: 'string',
+            description: 'Git commit SHA',
+          },
+          fileChanges: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/FileChange',
+            },
+          },
+          loc: {
+            type: 'integer',
+          },
+        },
+        required: ['parentSha', 'sha', 'fileChanges', 'loc'],
+        description: 'A changeset describes the changes between two git revisions.',
+      },
+      RepoVerdict: {
+        type: 'object',
+        properties: {
+          repoTest: {
+            $ref: '#/components/schemas/RepoTest',
+          },
+          status: {
+            type: 'string',
+            enum: ['passed', 'failed', 'unknown'],
+            description: 'The status of the test.',
+          },
+        },
+        required: ['repoTest', 'status'],
+        description: 'The verdict of a repo test, i.e. whether it passed or failed.',
+      },
+      MonorepoTcpInput: {
+        type: 'object',
+        properties: {
+          changeset: {
+            $ref: '#/components/schemas/Changeset',
+          },
+          testFiles: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/TestFile',
+            },
+          },
+        },
+        required: ['changeset', 'testFiles'],
+        description:
+          'TCP input for monorepos where automated tests and code for SUT are stored in a single repo.',
+      },
+    },
+    parameters: {},
+  },
+  paths: {
+    '/api/v1/projects': {
+      post: {
+        tags: ['Projects'],
+        summary: 'Create a new Project',
+        description: 'Create a new Project.',
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/ProjectInsert',
+              },
+            },
+            'application/x-www-form-urlencoded': {
+              schema: {
+                $ref: '#/components/schemas/ProjectInsert',
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'The new Project',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    id: {
+                      type: 'string',
+                      pattern: '[\\d]+',
+                      description: 'The ID of the Project',
+                    },
+                    name: {
+                      type: 'string',
+                    },
+                    apiToken: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['id', 'name', 'apiToken'],
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not Found',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '415': {
+            description: 'Unsupported Media Type',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '422': {
+            description: 'Unprocessable Entity',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal Server Error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/projects/{projectId}': {
+      get: {
+        tags: ['Projects'],
+        summary: 'Get information about a project',
+        description: 'Retrieves a project that has been previously created.',
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+        parameters: [
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Project',
+            },
+            required: true,
+            description: 'The ID of the Project',
+            name: 'projectId',
+            in: 'path',
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Project information',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    id: {
+                      type: 'string',
+                      pattern: '[\\d]+',
+                      description: 'The ID of the Project',
+                    },
+                    name: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['id', 'name'],
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not Found',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal Server Error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/projects/{projectId}/repos': {
+      post: {
+        tags: ['Repos'],
+        summary: 'Create a new Repo',
+        description: 'Create a new Repo underneath a project.',
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+        parameters: [
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Project',
+            },
+            required: true,
+            description: 'The ID of the Project',
+            name: 'projectId',
+            in: 'path',
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/RepoInsert',
+              },
+            },
+            'application/x-www-form-urlencoded': {
+              schema: {
+                $ref: '#/components/schemas/RepoInsert',
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'The new Repo',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    id: {
+                      type: 'string',
+                      pattern: '[\\d]+',
+                      description: 'The ID of the Project',
+                    },
+                    name: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['id', 'name'],
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not Found',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '415': {
+            description: 'Unsupported Media Type',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '422': {
+            description: 'Unprocessable Entity',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal Server Error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/projects/{projectId}/versions': {
+      post: {
+        tags: ['Versions'],
+        summary: 'Create a new Version',
+        description: 'Create a new Version underneath a project.',
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+        parameters: [
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Project',
+            },
+            required: true,
+            description: 'The ID of the Project',
+            name: 'projectId',
+            in: 'path',
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/VersionInsert',
+              },
+            },
+            'application/x-www-form-urlencoded': {
+              schema: {
+                $ref: '#/components/schemas/VersionInsert',
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'The new Version',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/VersionRow',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not Found',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '415': {
+            description: 'Unsupported Media Type',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '422': {
+            description: 'Unprocessable Entity',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal Server Error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/projects/{projectId}/versions/{versionId}/tcp': {
+      post: {
+        tags: ['TCP'],
+        summary: 'Create a Test Repo TCP',
+        description:
+          'Use *Test Repo TCP* when:\n\n* Tests are stored in a Git repository\n* The SUT is stored in one or more *other* Git repositories',
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+        parameters: [
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Project',
+            },
+            required: true,
+            description: 'The ID of the Project',
+            name: 'projectId',
+            in: 'path',
+          },
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Version',
+            },
+            required: true,
+            description: 'The ID of the Version',
+            name: 'versionId',
+            in: 'path',
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/TestRepoTcpInput',
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Tests ordered by TCP score. The tests most likely to fail come first.',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/RepoTestTcpOutput',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not Found',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '415': {
+            description: 'Unsupported Media Type',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '422': {
+            description: 'Unprocessable Entity',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal Server Error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/projects/{projectId}/versions/{versionId}/verdicts': {
+      post: {
+        tags: ['Verdicts'],
+        summary: 'Store external verdicts',
+        description:
+          'Store verdicts for external tests. \n\nThis should be used when tests are external to the repo (e.g. manual tests), \nor in a multi-repo setting (automated tests in a separate repo from the SUT).',
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+        parameters: [
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Project',
+            },
+            required: true,
+            description: 'The ID of the Project',
+            name: 'projectId',
+            in: 'path',
+          },
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Version',
+            },
+            required: true,
+            description: 'The ID of the Version',
+            name: 'versionId',
+            in: 'path',
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'array',
+                items: {
+                  $ref: '#/components/schemas/ExternalVerdict',
+                },
+                description:
+                  'The verdicts in the order they were executed. If they were executed in parallel, the order should be the devised order by a TCP.',
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'The result of storing the verdicts',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/VerdictsOutput',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not Found',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '415': {
+            description: 'Unsupported Media Type',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '422': {
+            description: 'Unprocessable Entity',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal Server Error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/repos/{repoId}/changesets': {
+      post: {
+        tags: ['Changesets'],
+        summary: 'Store a new changeset.',
+        description:
+          'A changeset represents the changes between two revisions of a git repository.\nOptionally specify a versionId query parameter to attach it to a version.\n',
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+        parameters: [
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Project',
+            },
+            required: true,
+            description: 'The ID of the Project',
+            name: 'repoId',
+            in: 'path',
+          },
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Version',
+            },
+            required: false,
+            description: 'The ID of the Version',
+            name: 'versionId',
+            in: 'query',
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Changeset',
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'The created changeset',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/ChangesetOutput',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not Found',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '409': {
+            description: 'Conflict. The changeset already exists.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '415': {
+            description: 'Unsupported Media Type',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '422': {
+            description: 'Unprocessable Entity',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal Server Error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/repos/{repoId}/changesets/{changesetId}/verdicts': {
+      post: {
+        tags: ['Verdicts'],
+        summary: 'Store repo verdicts',
+        description: 'Store verdicts for tests stored in a Git repo.',
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+        parameters: [
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Project',
+            },
+            required: true,
+            description: 'The ID of the Project',
+            name: 'repoId',
+            in: 'path',
+          },
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Changeset',
+            },
+            required: true,
+            description: 'The ID of the Changeset',
+            name: 'changesetId',
+            in: 'path',
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'array',
+                items: {
+                  $ref: '#/components/schemas/RepoVerdict',
+                },
+                description:
+                  'The verdicts in the order they were executed. If they were executed in parallel, the order should be the devised order by a TCP.',
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'The result of storing the verdicts',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/VerdictsOutput',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not Found',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '415': {
+            description: 'Unsupported Media Type',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '422': {
+            description: 'Unprocessable Entity',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal Server Error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/repos/{repoId}/tcp': {
+      post: {
+        tags: ['TCP'],
+        summary: 'Create a Monorepo TCP',
+        description:
+          'Use *Monorepo TCP* when:\n\n* Tests are stored in a Git repository\n* The SUT is stored in the *same* Git repositories',
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+        parameters: [
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Project',
+            },
+            required: true,
+            description: 'The ID of the Project',
+            name: 'repoId',
+            in: 'path',
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/MonorepoTcpInput',
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Tests ordered by TCP score. The tests most likely to fail come first.',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/RepoTestTcpOutput',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not Found',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '415': {
+            description: 'Unsupported Media Type',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '422': {
+            description: 'Unprocessable Entity',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal Server Error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/repos/{repoId}/versions/{versionId}/tcp': {
+      post: {
+        tags: ['TCP'],
+        summary: 'Create a Version TCP',
+        description:
+          'Use *Test Repo TCP* when:\n\n* Tests are stored in a Git repository\n* The SUT is stored in one or more *other* Git repositories',
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+        parameters: [
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Project',
+            },
+            required: true,
+            description: 'The ID of the Project',
+            name: 'repoId',
+            in: 'path',
+          },
+          {
+            schema: {
+              type: 'string',
+              pattern: '[\\d]+',
+              description: 'The ID of the Version',
+            },
+            required: true,
+            description: 'The ID of the Version',
+            name: 'versionId',
+            in: 'path',
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/TestRepoTcpInput',
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Tests ordered by TCP score. The tests most likely to fail come first.',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/RepoTestTcpOutput',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Not Found',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '415': {
+            description: 'Unsupported Media Type',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '422': {
+            description: 'Unprocessable Entity',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal Server Error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['message'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+};
