@@ -1,0 +1,19 @@
+name: Artifact PoC
+
+on:
+  workflow_dispatch:
+
+jobs:
+  poc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create controlled artifact
+        run: |
+          mkdir -p artifact
+          echo "ARTIFACT_EXTRACTION_POC" > artifact/marker.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: repository
+          path: artifact
